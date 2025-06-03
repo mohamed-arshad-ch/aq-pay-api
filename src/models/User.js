@@ -8,7 +8,7 @@ class User {
    * @returns {Promise<object>} - Created user (without password)
    */
   static async create(userData) {
-    const { email, password, firstName, lastName } = userData;
+    const { email, password, firstName, lastName, phoneNumber, role = 'USER' } = userData;
     
     // Hash the password
     const hashedPassword = await hashPassword(password);
@@ -20,12 +20,18 @@ class User {
         password: hashedPassword,
         firstName: firstName?.trim() || null,
         lastName: lastName?.trim() || null,
+        phoneNumber: phoneNumber?.trim() || null,
+        role: role.toUpperCase(), // Ensure role is uppercase
+        isPortalAccess: false, // Default to false for new registrations
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
         createdAt: true,
         updatedAt: true,
       }
@@ -46,8 +52,19 @@ class User {
       email: true,
       firstName: true,
       lastName: true,
+      phoneNumber: true,
+      role: true,
+      isPortalAccess: true,
       createdAt: true,
       updatedAt: true,
+      wallet: {
+        select: {
+          id: true,
+          balance: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      }
     };
 
     if (includePassword) {
@@ -75,8 +92,19 @@ class User {
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
         createdAt: true,
         updatedAt: true,
+        wallet: {
+          select: {
+            id: true,
+            balance: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
       }
     });
 
@@ -90,6 +118,11 @@ class User {
    * @returns {Promise<object>} - Updated user
    */
   static async updateById(id, updateData) {
+    // If role is being updated, ensure it's uppercase
+    if (updateData.role) {
+      updateData.role = updateData.role.toUpperCase();
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -98,6 +131,9 @@ class User {
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
         createdAt: true,
         updatedAt: true,
       }
@@ -119,6 +155,9 @@ class User {
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
       }
     });
 
@@ -137,6 +176,128 @@ class User {
     });
 
     return !!user;
+  }
+
+  /**
+   * Find all users with role filter
+   * @param {string} role - Role to filter by (optional)
+   * @param {number} skip - Number of records to skip
+   * @param {number} take - Number of records to take
+   * @returns {Promise<object[]>} - Array of users
+   */
+  static async findAll(role = null, skip = 0, take = 10) {
+    const whereCondition = role ? { role: role.toUpperCase() } : {};
+
+    const users = await prisma.user.findMany({
+      where: whereCondition,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      skip,
+      take,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return users;
+  }
+
+  /**
+   * Count users by role
+   * @param {string} role - Role to count (optional)
+   * @returns {Promise<number>} - Count of users
+   */
+  static async count(role = null) {
+    const whereCondition = role ? { role: role.toUpperCase() } : {};
+
+    const count = await prisma.user.count({
+      where: whereCondition
+    });
+
+    return count;
+  }
+
+  /**
+   * Update portal access for a user
+   * @param {string} id - User ID
+   * @param {boolean} isPortalAccess - Portal access status
+   * @returns {Promise<object>} - Updated user
+   */
+  static async updatePortalAccess(id, isPortalAccess) {
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isPortalAccess },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    return user;
+  }
+
+  /**
+   * Get users with pending portal access (isPortalAccess = false)
+   * @param {number} skip - Number of records to skip
+   * @param {number} take - Number of records to take
+   * @returns {Promise<object[]>} - Array of users with pending access
+   */
+  static async findPendingPortalAccess(skip = 0, take = 10) {
+    const users = await prisma.user.findMany({
+      where: {
+        role: 'USER',
+        isPortalAccess: false
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        role: true,
+        isPortalAccess: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      skip,
+      take,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return users;
+  }
+
+  /**
+   * Count users with pending portal access
+   * @returns {Promise<number>} - Count of users with pending access
+   */
+  static async countPendingPortalAccess() {
+    const count = await prisma.user.count({
+      where: {
+        role: 'USER',
+        isPortalAccess: false
+      }
+    });
+
+    return count;
   }
 }
 

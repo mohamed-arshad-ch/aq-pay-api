@@ -13,14 +13,132 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String?
-  lastName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                      String                    @id @default(cuid())
+  email                   String                    @unique
+  password                String
+  firstName               String?
+  lastName                String?
+  phoneNumber             String?
+  role                    UserRole                  @default(USER)
+  isPortalAccess          Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  
+  // Relations
+  accounts                Account[]
+  wallet                  Wallet?
+  addMoneyTransactions    AddMoneyTransaction[]
+  transferMoneyTransactions TransferMoneyTransaction[]
+  allTransactions         AllTransaction[]
 
   @@map("users")
+}
+
+model Account {
+  id                      String                    @id @default(cuid())
+  accountHolderName       String
+  accountNumber           String                    @unique
+  ifscCode                String
+  userId                  String
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  
+  // Relations
+  user                    User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transferMoneyTransactions TransferMoneyTransaction[]
+  
+  @@map("accounts")
+}
+
+model Wallet {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  balance         Decimal          @default(0.00) @db.Decimal(15, 2)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Relation to user (one-to-one)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations to transactions
+  allTransactions AllTransaction[]
+  
+  @@map("wallets")
+}
+
+model AddMoneyTransaction {
+  id              String            @id @default(cuid())
+  amount          Decimal           @db.Decimal(15, 2)
+  location        String?
+  description     String?
+  transactionId   String?
+  status          TransactionStatus @default(PENDING)
+  userId          String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relation to user
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relation to all transactions
+  allTransaction  AllTransaction?
+  
+  @@map("add_money_transactions")
+}
+
+model TransferMoneyTransaction {
+  id              String            @id @default(cuid())
+  accountId       String
+  amount          Decimal           @db.Decimal(15, 2)
+  description     String?
+  status          TransactionStatus @default(PENDING)
+  userId          String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  account         Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relation to all transactions
+  allTransaction  AllTransaction?
+  
+  @@map("transfer_money_transactions")
+}
+
+model AllTransaction {
+  id                        String                      @id @default(cuid())
+  orderId                   String                      @unique
+  walletId                  String
+  userId                    String
+  amount                    Decimal                     @db.Decimal(15, 2)
+  transactionType           TransactionType
+  description               String?
+  addMoneyTransactionId     String?                     @unique
+  transferMoneyTransactionId String?                    @unique
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  
+  // Relations
+  wallet                    Wallet                      @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addMoneyTransaction       AddMoneyTransaction?        @relation(fields: [addMoneyTransactionId], references: [id])
+  transferMoneyTransaction  TransferMoneyTransaction?   @relation(fields: [transferMoneyTransactionId], references: [id])
+  
+  @@map("all_transactions")
 }
