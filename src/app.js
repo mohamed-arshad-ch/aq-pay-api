@@ -10,6 +10,7 @@ const walletRoutes = require('./routes/walletRoutes');
 const addMoneyRoutes = require('./routes/addMoneyRoutes');
 const transferMoneyRoutes = require('./routes/transferMoneyRoutes');
 const allTransactionRoutes = require('./routes/allTransactionRoutes');
+const transactionStatusRoutes = require('./routes/transactionStatusRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/add-money', addMoneyRoutes);
 app.use('/api/transfer-money', transferMoneyRoutes);
 app.use('/api/transactions', allTransactionRoutes);
+app.use('/api/transaction-status', transactionStatusRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -85,6 +87,12 @@ app.get('/', (req, res) => {
       getTransactionByOrderId: 'GET /api/transactions/order/:orderId (user/admin)',
       getUserTransactionStats: 'GET /api/transactions/my-stats (user)',
       
+      // Transaction Status endpoints (combined Add Money and Transfer Money)
+      getUserPendingTransactions: 'GET /api/transaction-status/user/pending?page=1&limit=10 (user)',
+      getUserProcessingTransactions: 'GET /api/transaction-status/user/processing?page=1&limit=10 (user)',
+      getUserCompletedTransactions: 'GET /api/transaction-status/user/completed?page=1&limit=10 (user)',
+      getUserRejectedTransactions: 'GET /api/transaction-status/user/rejected?page=1&limit=10 (user)',
+      
       // Admin endpoints (admin only)
       getAllUsers: 'GET /api/auth/users?page=1&limit=10&role=USER (admin)',
       getUserById: 'GET /api/auth/users/:userId (admin or self)',
@@ -111,6 +119,12 @@ app.get('/', (req, res) => {
       
       // All Transactions Management (admin only)
       getAdminAllTransactions: 'GET /api/transactions/admin/all-transactions?transactionType=DEPOSIT&userId=:userId&page=1&limit=10 (admin)',
+      
+      // Transaction Status Admin endpoints (combined Add Money and Transfer Money)
+      getAdminPendingTransactions: 'GET /api/transaction-status/admin/pending?page=1&limit=10&userId=:userId (admin)',
+      getAdminProcessingTransactions: 'GET /api/transaction-status/admin/processing?page=1&limit=10&userId=:userId (admin)',
+      getAdminCompletedTransactions: 'GET /api/transaction-status/admin/completed?page=1&limit=10&userId=:userId (admin)',
+      getAdminRejectedTransactions: 'GET /api/transaction-status/admin/rejected?page=1&limit=10&userId=:userId (admin)',
     },
     roles: {
       USER: 'Regular user with account management (requires portal access approval)',
