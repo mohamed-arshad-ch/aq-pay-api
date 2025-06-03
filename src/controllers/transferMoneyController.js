@@ -331,7 +331,7 @@ const approveTransferTransaction = async (req, res) => {
     }
 
     // Check if user has sufficient wallet balance
-    if (!existingTransaction.user.wallet || existingTransaction.user.wallet.balance < existingTransaction.amount) {
+    if (existingTransaction.user.wallet || existingTransaction.user.wallet.balance < existingTransaction.amount) {
       return res.status(400).json({
         success: false,
         message: 'Insufficient wallet balance for this transaction'
