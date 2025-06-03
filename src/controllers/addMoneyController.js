@@ -325,7 +325,7 @@ const approveTransaction = async (req, res) => {
           userId: existingTransaction.userId,
           amount: existingTransaction.amount,
           transactionType: 'DEPOSIT',
-          description: `Added money to wallet - Add Money Transaction ID: ${existingTransaction.id}`,
+          description: `Added money to wallet`,
           addMoneyTransactionId: existingTransaction.id
         },
         include: {

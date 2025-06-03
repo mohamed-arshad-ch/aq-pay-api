@@ -43,6 +43,22 @@ const getUserAllTransactions = async (req, res) => {
               status: true,
               transactionId: true
             }
+          },
+          transferMoneyTransaction: {
+            select: {
+              id: true,
+              amount: true,
+              status: true,
+              description: true,
+              account: {
+                select: {
+                  id: true,
+                  accountHolderName: true,
+                  accountNumber: true,
+                  ifscCode: true
+                }
+              }
+            }
           }
         }
       }),
@@ -118,6 +134,22 @@ const getAdminAllTransactions = async (req, res) => {
               transactionId: true,
               location: true
             }
+          },
+          transferMoneyTransaction: {
+            select: {
+              id: true,
+              amount: true,
+              status: true,
+              description: true,
+              account: {
+                select: {
+                  id: true,
+                  accountHolderName: true,
+                  accountNumber: true,
+                  ifscCode: true
+                }
+              }
+            }
           }
         }
       }),
@@ -187,6 +219,22 @@ const getTransactionByOrderId = async (req, res) => {
             transactionId: true,
             location: true,
             description: true
+          }
+        },
+        transferMoneyTransaction: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            description: true,
+            account: {
+              select: {
+                id: true,
+                accountHolderName: true,
+                accountNumber: true,
+                ifscCode: true
+              }
+            }
           }
         }
       }
