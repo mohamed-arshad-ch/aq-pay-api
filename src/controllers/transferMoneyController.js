@@ -313,6 +313,9 @@ const approveTransferTransaction = async (req, res) => {
       }
     });
 
+
+    console.log(existingTransaction,"existingTransaction");
+    
     if (!existingTransaction) {
       return res.status(404).json({
         success: false,
