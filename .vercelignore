@@ -34,5 +34,11 @@ Thumbs.db
 .git/
 .gitignore
 
+# Development server file (not needed for Vercel)
+src/server.js
+
+# Test files
+scripts/test-deployment.js
+
 # README (optional, you might want to keep it)
 # README.md 

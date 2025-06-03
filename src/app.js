@@ -32,6 +32,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root endpoint for Vercel
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'AQ-PAY API is running on Vercel',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      register: 'POST /api/auth/register',
+      login: 'POST /api/auth/login',
+      profile: 'GET /api/auth/profile (protected)',
+      updateProfile: 'PUT /api/auth/profile (protected)',
+      logout: 'POST /api/auth/logout (protected)'
+    }
+  });
+});
+
 // Error handling middleware
 app.use(errorHandler);
 

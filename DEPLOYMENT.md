@@ -8,6 +8,19 @@ This guide will help you deploy your AQ-PAY API to Vercel.
 2. **Vercel CLI** (optional): `npm install -g vercel`
 3. **Git Repository**: Your code should be in a Git repository (GitHub, GitLab, or Bitbucket)
 
+## Project Structure for Vercel
+
+```
+├── api/
+│   └── index.js        # Vercel serverless function entry point
+├── src/
+│   ├── app.js          # Express application
+│   ├── server.js       # Development server (ignored by Vercel)
+│   └── ...             # Other source files
+├── vercel.json         # Vercel configuration
+└── .vercelignore       # Files to exclude from deployment
+```
+
 ## Step 1: Prepare Your Environment Variables
 
 You'll need to set up the following environment variables in Vercel:
@@ -32,7 +45,7 @@ BCRYPT_SALT_ROUNDS=12
 2. **Configure Project**:
    - **Framework Preset**: Other
    - **Root Directory**: `./` (default)
-   - **Build Command**: `npm run build` (optional, as we have postinstall)
+   - **Build Command**: Leave empty (auto-detected)
    - **Output Directory**: Leave empty
    - **Install Command**: `npm install`
 
@@ -85,7 +98,12 @@ After deployment, test your API:
    curl https://your-deployment-url.vercel.app/api/health
    ```
 
-2. **Register a User**:
+2. **Root Endpoint**:
+   ```bash
+   curl https://your-deployment-url.vercel.app/
+   ```
+
+3. **Register a User**:
    ```bash
    curl -X POST https://your-deployment-url.vercel.app/api/auth/register \
      -H "Content-Type: application/json" \
@@ -97,7 +115,7 @@ After deployment, test your API:
      }'
    ```
 
-3. **Login**:
+4. **Login**:
    ```bash
    curl -X POST https://your-deployment-url.vercel.app/api/auth/login \
      -H "Content-Type: application/json" \
@@ -109,23 +127,25 @@ After deployment, test your API:
 
 ## Configuration Files Explained
 
+### `api/index.js`
+- Vercel serverless function entry point
+- Imports and exports the Express app
+- Follows Vercel's convention for serverless functions
+
 ### `vercel.json`
-- Configures how Vercel builds and routes your application
-- Sets up the Node.js runtime and routing
+- Simplified configuration
+- Routes all requests to the `/api` serverless function
+- Auto-detects Node.js runtime
 
 ### `.vercelignore`
-- Excludes files from deployment (similar to .gitignore)
+- Excludes files from deployment
+- Includes development server file since it's not needed in serverless
 - Keeps the deployment package small and secure
 
 ### Updated `package.json`
 - Added build scripts for Vercel
 - Moved Prisma to dependencies for production builds
 - Added postinstall script to generate Prisma client
-
-### Updated `src/server.js`
-- Modified to work in serverless environment
-- Exports the Express app for Vercel
-- Handles database connections appropriately
 
 ## Database Considerations
 
@@ -153,6 +173,11 @@ After deployment, test your API:
 ### Function Timeouts
 - Vercel has a 30-second timeout for hobby plans
 - Consider upgrading for longer timeouts if needed
+
+### Common Deployment Issues
+1. **"Functions pattern doesn't match"**: Fixed by using `api/index.js`
+2. **"Cannot use functions with builds"**: Fixed by simplifying `vercel.json`
+3. **Database connection errors**: Check environment variables
 
 ## Security Best Practices
 
@@ -182,4 +207,15 @@ Once connected to Git:
 - Automatic HTTPS certificates
 - Global CDN distribution
 
-Your API is now ready for production use! 🚀 
+Your API is now ready for production use! 🚀
+
+## API Endpoints After Deployment
+
+Once deployed, your API will be available at:
+- `GET /` - API information and endpoints list
+- `GET /api/health` - Health check
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get user profile (protected)
+- `PUT /api/auth/profile` - Update profile (protected)
+- `POST /api/auth/logout` - Logout (protected) 
