@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
+const Notification = require('../models/Notification');
 const { comparePassword, generateToken, USER_ROLES, isAdmin } = require('../utils/authUtils');
 
 /**
@@ -73,6 +74,9 @@ async function register(req, res, next) {
       phoneNumber,
       role: userRole
     });
+    
+    // Create registration notification
+    await Notification.createRegistrationNotification(user.id);
 
     res.status(201).json({
       status: 'success',
@@ -491,6 +495,12 @@ async function updatePortalAccess(req, res, next) {
           // Just log the error and continue
         }
       }
+      
+      // Create portal access notification
+      await Notification.createPortalAccessNotification(userId, true);
+    } else {
+      // Create portal access denied notification
+      await Notification.createPortalAccessNotification(userId, false);
     }
 
     const action = isPortalAccess ? 'approved' : 'denied';
@@ -560,6 +570,12 @@ async function bulkApprovePortalAccess(req, res, next) {
               // Don't fail the approval, just log the error
             }
           }
+          
+          // Create portal access notification
+          await Notification.createPortalAccessNotification(userId, true);
+        } else {
+          // Create portal access denied notification
+          await Notification.createPortalAccessNotification(userId, false);
         }
         
         updatedUsers.push(updatedUser);

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { generateUniqueOrderId } = require('../utils/orderIdGenerator');
+const Notification = require('../models/Notification');
 const prisma = new PrismaClient();
 
 // Create a new add money transaction
@@ -36,6 +37,14 @@ const createAddMoneyTransaction = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for pending transaction
+    await Notification.createAddMoneyNotification(
+      userId,
+      'PENDING',
+      parseFloat(amount),
+      transaction.id
+    );
 
     res.status(201).json({
       success: true,
@@ -221,6 +230,14 @@ const updateToProcessing = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for processing status
+    await Notification.createAddMoneyNotification(
+      updatedTransaction.userId,
+      'PROCESSING',
+      parseFloat(updatedTransaction.amount),
+      updatedTransaction.id
+    );
 
     res.status(200).json({
       success: true,
@@ -346,10 +363,18 @@ const approveTransaction = async (req, res) => {
         allTransactionEntry
       };
     });
+    
+    // Create notification for completed status
+    await Notification.createAddMoneyNotification(
+      existingTransaction.userId,
+      'COMPLETED',
+      parseFloat(existingTransaction.amount),
+      existingTransaction.id
+    );
 
     res.status(200).json({
       success: true,
-      message: 'Transaction approved, wallet updated, and transaction recorded successfully',
+      message: 'Transaction approved successfully and wallet balance updated',
       data: result
     });
 
@@ -407,6 +432,14 @@ const rejectTransaction = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for rejected status
+    await Notification.createAddMoneyNotification(
+      updatedTransaction.userId,
+      'REJECTED',
+      parseFloat(updatedTransaction.amount),
+      updatedTransaction.id
+    );
 
     res.status(200).json({
       success: true,

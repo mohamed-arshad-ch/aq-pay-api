@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { generateUniqueOrderId } = require('../utils/orderIdGenerator');
+const Notification = require('../models/Notification');
 const prisma = new PrismaClient();
 
 // Create a new transfer money transaction
@@ -9,17 +10,10 @@ const createTransferMoneyTransaction = async (req, res) => {
     const userId = req.user.id;
 
     // Validation
-    if (!accountId) {
+    if (!accountId || !amount || amount <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Account ID is required'
-      });
-    }
-
-    if (!amount || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Amount is required and must be greater than 0'
+        message: 'Account ID and amount are required. Amount must be greater than 0'
       });
     }
 
@@ -38,15 +32,22 @@ const createTransferMoneyTransaction = async (req, res) => {
       });
     }
 
-    // Check if user has sufficient wallet balance
-    const userWallet = await prisma.wallet.findUnique({
+    // Check if user has a wallet and sufficient balance
+    const wallet = await prisma.wallet.findUnique({
       where: { userId: userId }
     });
 
-    if (!userWallet || userWallet.balance < parseFloat(amount)) {
+    if (!wallet) {
       return res.status(400).json({
         success: false,
-        message: 'Insufficient wallet balance'
+        message: 'You don\'t have a wallet. Please contact support'
+      });
+    }
+
+    if (parseFloat(wallet.balance) < parseFloat(amount)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient balance in your wallet'
       });
     }
 
@@ -78,6 +79,15 @@ const createTransferMoneyTransaction = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for pending transaction
+    await Notification.createTransferMoneyNotification(
+      userId,
+      'PENDING',
+      parseFloat(amount),
+      account.accountNumber,
+      transaction.id
+    );
 
     res.status(201).json({
       success: true,
@@ -235,7 +245,10 @@ const updateToProcessing = async (req, res) => {
 
     // Check if transaction exists and is in PENDING status
     const existingTransaction = await prisma.transferMoneyTransaction.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        account: true
+      }
     });
 
     if (!existingTransaction) {
@@ -278,6 +291,15 @@ const updateToProcessing = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for processing status
+    await Notification.createTransferMoneyNotification(
+      updatedTransaction.userId,
+      'PROCESSING',
+      parseFloat(updatedTransaction.amount),
+      existingTransaction.account.accountNumber,
+      updatedTransaction.id
+    );
 
     res.status(200).json({
       success: true,
@@ -295,7 +317,7 @@ const updateToProcessing = async (req, res) => {
   }
 };
 
-// Admin: Approve transfer transaction (Complete)
+// Admin: Approve transfer transaction
 const approveTransferTransaction = async (req, res) => {
   try {
     const { id } = req.params;
@@ -304,18 +326,15 @@ const approveTransferTransaction = async (req, res) => {
     const existingTransaction = await prisma.transferMoneyTransaction.findUnique({
       where: { id },
       include: {
-        account: true,
         user: {
           include: {
             wallet: true
           }
-        }
+        },
+        account: true
       }
     });
 
-
-    console.log(existingTransaction,"existingTransaction");
-    
     if (!existingTransaction) {
       return res.status(404).json({
         success: false,
@@ -330,11 +349,11 @@ const approveTransferTransaction = async (req, res) => {
       });
     }
 
-    // Check if user has sufficient wallet balance
-    if (!existingTransaction.user.wallet ) {
+    // Check if user has sufficient balance
+    if (parseFloat(existingTransaction.user.wallet.balance) < parseFloat(existingTransaction.amount)) {
       return res.status(400).json({
         success: false,
-        message: 'Insufficient wallet balance for this transaction'
+        message: 'User has insufficient balance in wallet'
       });
     }
 
@@ -410,10 +429,19 @@ const approveTransferTransaction = async (req, res) => {
         allTransactionEntry
       };
     });
+    
+    // Create notification for completed status
+    await Notification.createTransferMoneyNotification(
+      existingTransaction.userId,
+      'COMPLETED',
+      parseFloat(existingTransaction.amount),
+      existingTransaction.account.accountNumber,
+      existingTransaction.id
+    );
 
     res.status(200).json({
       success: true,
-      message: 'Transfer transaction approved, wallet updated, and transaction recorded successfully',
+      message: 'Transfer approved successfully, money sent to bank account',
       data: result
     });
 
@@ -435,7 +463,10 @@ const rejectTransferTransaction = async (req, res) => {
 
     // Check if transaction exists and is in PROCESSING status
     const existingTransaction = await prisma.transferMoneyTransaction.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        account: true
+      }
     });
 
     if (!existingTransaction) {
@@ -479,6 +510,15 @@ const rejectTransferTransaction = async (req, res) => {
         }
       }
     });
+    
+    // Create notification for rejected status
+    await Notification.createTransferMoneyNotification(
+      updatedTransaction.userId,
+      'REJECTED',
+      parseFloat(updatedTransaction.amount),
+      existingTransaction.account.accountNumber,
+      updatedTransaction.id
+    );
 
     res.status(200).json({
       success: true,

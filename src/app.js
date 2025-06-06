@@ -12,6 +12,7 @@ const transferMoneyRoutes = require('./routes/transferMoneyRoutes');
 const allTransactionRoutes = require('./routes/allTransactionRoutes');
 const transactionStatusRoutes = require('./routes/transactionStatusRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/transfer-money', transferMoneyRoutes);
 app.use('/api/transactions', allTransactionRoutes);
 app.use('/api/transaction-status', transactionStatusRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -63,6 +65,12 @@ app.get('/', (req, res) => {
       updateProfile: 'PUT /api/auth/profile (protected)',
       getUserRole: 'GET /api/auth/role (protected)',
       logout: 'POST /api/auth/logout (protected)',
+      
+      // Notification endpoints
+      getMyNotifications: 'GET /api/notifications?unreadOnly=false&page=1&limit=10 (user/admin)',
+      markNotificationAsRead: 'PUT /api/notifications/:id/read (user/admin)',
+      markAllNotificationsAsRead: 'PUT /api/notifications/mark-all-read (user/admin)',
+      deleteNotification: 'DELETE /api/notifications/:id (user/admin)',
       
       // Account Management endpoints (user role only)
       createAccount: 'POST /api/accounts (user)',
