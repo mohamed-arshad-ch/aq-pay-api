@@ -73,6 +73,7 @@ const getMyPushTokens = async (req, res) => {
 const deletePushToken = async (req, res) => {
   try {
     const { token } = req.body;
+    const userId = req.user.id;
     
     // Validate token
     if (!token) {
@@ -82,13 +83,13 @@ const deletePushToken = async (req, res) => {
       });
     }
     
-    // Deactivate token
-    const deactivatedToken = await PushToken.deactivateToken(token);
+    // Deactivate token for the current user
+    const deactivatedToken = await PushToken.deactivateToken(token, userId);
     
     if (!deactivatedToken) {
       return res.status(404).json({
         success: false,
-        message: 'Push token not found'
+        message: 'Push token not found for this user'
       });
     }
     

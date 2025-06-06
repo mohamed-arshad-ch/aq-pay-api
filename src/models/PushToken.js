@@ -9,32 +9,16 @@ class PushToken {
    * @returns {Promise<object>} - Created or updated token
    */
   static async saveToken(userId, token, deviceInfo = null) {
-    // Check if token already exists
-    const existingToken = await prisma.pushToken.findUnique({
-      where: { token }
+    // Check if token already exists for the same user
+    const existingToken = await prisma.pushToken.findFirst({
+      where: { 
+        token,
+        userId
+      }
     });
 
     if (existingToken) {
-      // If token exists but belongs to a different user, update the userId
-      if (existingToken.userId !== userId) {
-        // Deactivate the old token first
-        await prisma.pushToken.update({
-          where: { id: existingToken.id },
-          data: { isActive: false }
-        });
-        
-        // Create a new token for the current user
-        return await prisma.pushToken.create({
-          data: {
-            userId,
-            token,
-            deviceInfo,
-            isActive: true
-          }
-        });
-      }
-      
-      // If token exists for the same user, update other information
+      // If token exists for the same user, update information
       return await prisma.pushToken.update({
         where: { id: existingToken.id },
         data: {
@@ -71,13 +55,21 @@ class PushToken {
   }
   
   /**
-   * Deactivate a token
+   * Deactivate a token for a specific user
    * @param {string} token - Expo push notification token
+   * @param {string} userId - Optional user ID (if not provided, deactivates first matching token)
    * @returns {Promise<object>} - Updated token or null if not found
    */
-  static async deactivateToken(token) {
-    const existingToken = await prisma.pushToken.findUnique({
-      where: { token }
+  static async deactivateToken(token, userId = null) {
+    const whereClause = { token };
+    
+    // If userId is provided, include it in the query
+    if (userId) {
+      whereClause.userId = userId;
+    }
+    
+    const existingToken = await prisma.pushToken.findFirst({
+      where: whereClause
     });
     
     if (!existingToken) {

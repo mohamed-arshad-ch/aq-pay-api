@@ -173,7 +173,7 @@ model Notification {
 model PushToken {
   id              String            @id @default(cuid())
   userId          String
-  token           String            @unique
+  token           String
   deviceInfo      String?           // Optional device information
   isActive        Boolean           @default(true)
   createdAt       DateTime          @default(now())

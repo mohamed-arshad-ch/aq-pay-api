@@ -193,6 +193,13 @@ Authorization: Bearer <your_jwt_token>
 
 This API is designed to work with Expo Push Notifications. Expo push tokens follow the format `ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]` for production tokens or `ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]` for developer tokens.
 
+### Multiple User Roles on Same Device
+
+The system supports using the same device token for multiple user accounts. This means:
+- A user can log in with different accounts (e.g., User and Admin roles) on the same device
+- Each account will have its own token record in the system
+- Push notifications can be sent to specific users even when they share the same physical device
+
 ### Device Information
 
 The `deviceInfo` field is optional but recommended to help identify which device a token belongs to. This can include information such as:
