@@ -354,6 +354,33 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
+### 5. Get Total Unread Notification Count
+
+**Endpoint:** `GET /api/notifications/admin/unread-count`
+
+**Description:** Gets the total count of unread notifications across all users, broken down by notification type. This is useful for admin dashboards and notification management.
+
+**Authentication:** Required (Admin only)
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalUnreadCount": 45,
+    "byType": {
+      "registration": 5,
+      "portalAccess": 8,
+      "addMoney": 12,
+      "transferMoney": 15,
+      "system": 5
+    }
+  }
+}
+```
+
+---
+
 ## Notification Types
 
 The system automatically generates notifications for the following events:
@@ -376,4 +403,21 @@ The system automatically generates notifications for the following events:
 
 ### 5. System Notifications (`SYSTEM`)
 - System-generated notifications that don't fit into other categories
-- Used for important announcements and system updates 
+- Used for important announcements and system updates
+
+### 6. Get Unread Notification Count
+
+**Endpoint:** `GET /api/notifications/unread-count`
+
+**Description:** Gets only the count of unread notifications for the authenticated user. This is a lightweight endpoint for showing badge counts in user interfaces.
+
+**Authentication:** Required (User/Admin)
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "unreadCount": 5
+  }
+} 

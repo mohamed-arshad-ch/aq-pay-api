@@ -70,6 +70,7 @@ app.get('/', (req, res) => {
       
       // Notification endpoints
       getMyNotifications: 'GET /api/notifications?unreadOnly=false&page=1&limit=10 (user/admin)',
+      getUnreadNotificationCount: 'GET /api/notifications/unread-count (user/admin)',
       markNotificationAsRead: 'PUT /api/notifications/:id/read (user/admin)',
       markAllNotificationsAsRead: 'PUT /api/notifications/mark-all-read (user/admin)',
       deleteNotification: 'DELETE /api/notifications/:id (user/admin)',
@@ -77,6 +78,7 @@ app.get('/', (req, res) => {
       // Admin Notification endpoints
       getAllNotifications: 'GET /api/notifications/admin/all?userId=:userId&type=ADD_MONEY&unreadOnly=true&page=1&limit=10 (admin)',
       getNotificationStats: 'GET /api/notifications/admin/stats (admin)',
+      getTotalUnreadCount: 'GET /api/notifications/admin/unread-count (admin)',
       adminMarkAsRead: 'PUT /api/notifications/admin/:id/read (admin)',
       adminDeleteNotification: 'DELETE /api/notifications/admin/:id (admin)',
       

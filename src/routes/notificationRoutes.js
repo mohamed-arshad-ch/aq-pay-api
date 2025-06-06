@@ -9,7 +9,9 @@ const {
   markAllAsRead,
   deleteNotification,
   adminMarkAsRead,
-  adminDeleteNotification
+  adminDeleteNotification,
+  getUnreadNotificationCount,
+  getTotalUnreadCount
 } = require('../controllers/notificationController');
 
 /**
@@ -18,6 +20,13 @@ const {
  * @access  Private (User/Admin)
  */
 router.get('/', authenticateToken, getMyNotifications);
+
+/**
+ * @route   GET /api/notifications/unread-count
+ * @desc    Get unread notification count for the authenticated user
+ * @access  Private (User/Admin)
+ */
+router.get('/unread-count', authenticateToken, getUnreadNotificationCount);
 
 /**
  * @route   PUT /api/notifications/:id/read
@@ -53,6 +62,13 @@ router.get('/admin/all', authenticateToken, requireAdmin, getAllNotifications);
  * @access  Private (Admin only)
  */
 router.get('/admin/stats', authenticateToken, requireAdmin, getNotificationStats);
+
+/**
+ * @route   GET /api/notifications/admin/unread-count
+ * @desc    Get total unread notification count for admin dashboard
+ * @access  Private (Admin only)
+ */
+router.get('/admin/unread-count', authenticateToken, requireAdmin, getTotalUnreadCount);
 
 /**
  * @route   PUT /api/notifications/admin/:id/read

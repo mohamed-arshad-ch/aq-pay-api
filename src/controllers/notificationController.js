@@ -408,6 +408,80 @@ const adminDeleteNotification = async (req, res) => {
   }
 };
 
+/**
+ * Get unread notification count for the authenticated user
+ * @route GET /api/notifications/unread-count
+ * @access Private (User/Admin)
+ */
+const getUnreadNotificationCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get unread count
+    const unreadCount = await Notification.getUnreadCount(userId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        unreadCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching unread notification count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get total unread notification count for admin dashboard
+ * @route GET /api/notifications/admin/unread-count
+ * @access Private (Admin only)
+ */
+const getTotalUnreadCount = async (req, res) => {
+  try {
+    // Get total unread count
+    const totalUnreadCount = await prisma.notification.count({
+      where: {
+        isRead: false
+      }
+    });
+    
+    // Get unread counts by type
+    const typeUnreadCounts = await Promise.all([
+      prisma.notification.count({ where: { type: 'REGISTRATION', isRead: false } }),
+      prisma.notification.count({ where: { type: 'PORTAL_ACCESS', isRead: false } }),
+      prisma.notification.count({ where: { type: 'ADD_MONEY', isRead: false } }),
+      prisma.notification.count({ where: { type: 'TRANSFER_MONEY', isRead: false } }),
+      prisma.notification.count({ where: { type: 'SYSTEM', isRead: false } })
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUnreadCount,
+        byType: {
+          registration: typeUnreadCounts[0],
+          portalAccess: typeUnreadCounts[1],
+          addMoney: typeUnreadCounts[2],
+          transferMoney: typeUnreadCounts[3],
+          system: typeUnreadCounts[4]
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching total unread notification count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getMyNotifications,
   getAllNotifications,
@@ -416,5 +490,7 @@ module.exports = {
   markAllAsRead,
   deleteNotification,
   adminMarkAsRead,
-  adminDeleteNotification
+  adminDeleteNotification,
+  getUnreadNotificationCount,
+  getTotalUnreadCount
 }; 
