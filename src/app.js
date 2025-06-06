@@ -11,6 +11,7 @@ const addMoneyRoutes = require('./routes/addMoneyRoutes');
 const transferMoneyRoutes = require('./routes/transferMoneyRoutes');
 const allTransactionRoutes = require('./routes/allTransactionRoutes');
 const transactionStatusRoutes = require('./routes/transactionStatusRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/add-money', addMoneyRoutes);
 app.use('/api/transfer-money', transferMoneyRoutes);
 app.use('/api/transactions', allTransactionRoutes);
 app.use('/api/transaction-status', transactionStatusRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -99,6 +101,13 @@ app.get('/', (req, res) => {
       updateUser: 'PUT /api/auth/users/:userId (admin)',
       deleteUser: 'DELETE /api/auth/users/:userId (admin)',
       adminRegister: 'POST /api/auth/admin/register (admin)',
+      
+      // New Admin Comprehensive User Data endpoints
+      getAllUsersWithDetails: 'GET /api/admin/users?page=1&limit=10&email=test&role=USER (admin)',
+      getUserDetailById: 'GET /api/admin/users/:userId (admin)',
+      
+      // New Admin Dashboard endpoint
+      getDashboardStats: 'GET /api/admin/dashboard (admin)',
       
       // Portal Access Management (admin only)
       getPendingUsers: 'GET /api/auth/pending-portal-access?page=1&limit=10 (admin)',
