@@ -72,6 +72,12 @@ app.get('/', (req, res) => {
       markAllNotificationsAsRead: 'PUT /api/notifications/mark-all-read (user/admin)',
       deleteNotification: 'DELETE /api/notifications/:id (user/admin)',
       
+      // Admin Notification endpoints
+      getAllNotifications: 'GET /api/notifications/admin/all?userId=:userId&type=ADD_MONEY&unreadOnly=true&page=1&limit=10 (admin)',
+      getNotificationStats: 'GET /api/notifications/admin/stats (admin)',
+      adminMarkAsRead: 'PUT /api/notifications/admin/:id/read (admin)',
+      adminDeleteNotification: 'DELETE /api/notifications/admin/:id (admin)',
+      
       // Account Management endpoints (user role only)
       createAccount: 'POST /api/accounts (user)',
       getUserAccounts: 'GET /api/accounts?page=1&limit=10 (user)',

@@ -15,7 +15,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## Notification Endpoints
+## User Notification Endpoints
 
 ### 1. Get My Notifications
 
@@ -157,6 +157,198 @@ Authorization: Bearer <your_jwt_token>
 {
   "success": false,
   "message": "Notification not found or does not belong to you"
+}
+```
+
+---
+
+## Admin Notification Endpoints
+
+### 1. Get All Notifications
+
+**Endpoint:** `GET /api/notifications/admin/all`
+
+**Description:** Retrieves all notifications in the system with pagination, filtering, and user information.
+
+**Authentication:** Required (Admin only)
+
+**Query Parameters:**
+- `userId` (string, optional): Filter notifications by user ID
+- `type` (string, optional): Filter notifications by type (REGISTRATION, PORTAL_ACCESS, ADD_MONEY, TRANSFER_MONEY, SYSTEM)
+- `unreadOnly` (boolean, optional, default: false): Filter to show only unread notifications
+- `page` (number, optional, default: 1): Page number for pagination
+- `limit` (number, optional, default: 10): Number of notifications per page
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "notifications": [
+      {
+        "id": "notif123",
+        "userId": "user123",
+        "title": "Money Added Successfully",
+        "message": "₹500.00 has been successfully added to your wallet.",
+        "type": "ADD_MONEY",
+        "isRead": false,
+        "relatedId": "transaction123",
+        "createdAt": "2024-01-15T11:30:00.000Z",
+        "updatedAt": "2024-01-15T11:30:00.000Z",
+        "user": {
+          "id": "user123",
+          "email": "user@example.com",
+          "firstName": "John",
+          "lastName": "Doe",
+          "role": "USER"
+        }
+      },
+      {
+        "id": "notif124",
+        "userId": "user456",
+        "title": "Transfer Request Processing",
+        "message": "Your request to transfer ₹200.00 to account ending with ****5678 is now being processed.",
+        "type": "TRANSFER_MONEY",
+        "isRead": true,
+        "relatedId": "transfer123",
+        "createdAt": "2024-01-14T10:30:00.000Z",
+        "updatedAt": "2024-01-14T11:00:00.000Z",
+        "user": {
+          "id": "user456",
+          "email": "jane@example.com",
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "role": "USER"
+        }
+      }
+    ],
+    "totalUnreadCount": 45,
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 125,
+      "totalPages": 13
+    }
+  }
+}
+```
+
+---
+
+### 2. Get Notification Statistics
+
+**Endpoint:** `GET /api/notifications/admin/stats`
+
+**Description:** Retrieves statistics about notifications in the system for the admin dashboard.
+
+**Authentication:** Required (Admin only)
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "counts": {
+      "total": 125,
+      "unread": 45,
+      "byType": {
+        "registration": 15,
+        "portalAccess": 10,
+        "addMoney": 50,
+        "transferMoney": 45,
+        "system": 5
+      }
+    },
+    "topUsers": [
+      {
+        "user": {
+          "id": "user123",
+          "email": "user@example.com",
+          "firstName": "John",
+          "lastName": "Doe"
+        },
+        "notificationCount": 25
+      },
+      {
+        "user": {
+          "id": "user456",
+          "email": "jane@example.com",
+          "firstName": "Jane",
+          "lastName": "Smith"
+        },
+        "notificationCount": 18
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 3. Admin Mark Notification as Read
+
+**Endpoint:** `PUT /api/notifications/admin/:id/read`
+
+**Description:** Allows an admin to mark any notification as read, regardless of the user it belongs to.
+
+**Authentication:** Required (Admin only)
+
+**URL Parameters:**
+- `id` (string, required): The ID of the notification to mark as read
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "message": "Notification marked as read by admin",
+  "data": {
+    "id": "notif123",
+    "userId": "user123",
+    "title": "Money Added Successfully",
+    "message": "₹500.00 has been successfully added to your wallet.",
+    "type": "ADD_MONEY",
+    "isRead": true,
+    "relatedId": "transaction123",
+    "createdAt": "2024-01-15T11:30:00.000Z",
+    "updatedAt": "2024-01-15T12:00:00.000Z"
+  }
+}
+```
+
+**Sample Response (Error - 404):**
+```json
+{
+  "success": false,
+  "message": "Notification not found"
+}
+```
+
+---
+
+### 4. Admin Delete Notification
+
+**Endpoint:** `DELETE /api/notifications/admin/:id`
+
+**Description:** Allows an admin to delete any notification, regardless of the user it belongs to.
+
+**Authentication:** Required (Admin only)
+
+**URL Parameters:**
+- `id` (string, required): The ID of the notification to delete
+
+**Sample Response (Success - 200):**
+```json
+{
+  "success": true,
+  "message": "Notification deleted by admin"
+}
+```
+
+**Sample Response (Error - 404):**
+```json
+{
+  "success": false,
+  "message": "Notification not found"
 }
 ```
 

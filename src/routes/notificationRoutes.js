@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const {
   getMyNotifications,
+  getAllNotifications,
+  getNotificationStats,
   markAsRead,
   markAllAsRead,
-  deleteNotification
+  deleteNotification,
+  adminMarkAsRead,
+  adminDeleteNotification
 } = require('../controllers/notificationController');
 
 /**
@@ -35,5 +39,33 @@ router.put('/mark-all-read', authenticateToken, markAllAsRead);
  * @access  Private (User/Admin)
  */
 router.delete('/:id', authenticateToken, deleteNotification);
+
+/**
+ * @route   GET /api/notifications/admin/all
+ * @desc    Get all notifications in the system (admin only)
+ * @access  Private (Admin only)
+ */
+router.get('/admin/all', authenticateToken, requireAdmin, getAllNotifications);
+
+/**
+ * @route   GET /api/notifications/admin/stats
+ * @desc    Get notification statistics for admin dashboard
+ * @access  Private (Admin only)
+ */
+router.get('/admin/stats', authenticateToken, requireAdmin, getNotificationStats);
+
+/**
+ * @route   PUT /api/notifications/admin/:id/read
+ * @desc    Admin can mark any notification as read
+ * @access  Private (Admin only)
+ */
+router.put('/admin/:id/read', authenticateToken, requireAdmin, adminMarkAsRead);
+
+/**
+ * @route   DELETE /api/notifications/admin/:id
+ * @desc    Admin can delete any notification
+ * @access  Private (Admin only)
+ */
+router.delete('/admin/:id', authenticateToken, requireAdmin, adminDeleteNotification);
 
 module.exports = router; 
