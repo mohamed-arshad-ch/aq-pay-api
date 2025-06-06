@@ -14,6 +14,7 @@ const transactionStatusRoutes = require('./routes/transactionStatusRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const pushTokenRoutes = require('./routes/pushTokenRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/transaction-status', transactionStatusRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/push-tokens', pushTokenRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -87,6 +89,9 @@ app.get('/', (req, res) => {
       getMyPushTokens: 'GET /api/push-tokens/my-tokens (user/admin)',
       deletePushToken: 'DELETE /api/push-tokens (user/admin) - body: {token}',
       getAllPushTokens: 'GET /api/push-tokens/admin/all (admin)',
+      
+      // Dashboard endpoints
+      getRecentMapTransactions: 'GET /api/dashboard/map-transactions (user/admin) - returns 5 most recent transactions with location data',
       
       // Account Management endpoints (user role only)
       createAccount: 'POST /api/accounts (user)',
