@@ -109,6 +109,12 @@ app.get('/', (req, res) => {
       // New Admin Dashboard endpoint
       getDashboardStats: 'GET /api/admin/dashboard (admin)',
       
+      // New Admin User-specific endpoints
+      getUserAccounts: 'GET /api/admin/users/:userId/accounts?page=1&limit=10 (admin)',
+      getUserAddMoneyTransactions: 'GET /api/admin/users/:userId/add-money-transactions?status=COMPLETED&page=1&limit=10 (admin)',
+      getUserTransferMoneyTransactions: 'GET /api/admin/users/:userId/transfer-money-transactions?status=COMPLETED&page=1&limit=10 (admin)',
+      getUserAllTransactions: 'GET /api/admin/users/:userId/all-transactions?transactionType=DEPOSIT&page=1&limit=10 (admin)',
+      
       // Portal Access Management (admin only)
       getPendingUsers: 'GET /api/auth/pending-portal-access?page=1&limit=10 (admin)',
       approvePortalAccess: 'PUT /api/auth/users/:userId/portal-access (admin)',

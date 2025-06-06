@@ -362,8 +362,358 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+/**
+ * Get all accounts for a specific user
+ * @route GET /api/admin/users/:userId/accounts
+ * @access Private (Admin only)
+ */
+const getUserAccounts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Get total count for pagination
+    const totalAccounts = await prisma.account.count({
+      where: { userId }
+    });
+
+    // Get user accounts with pagination
+    const accounts = await prisma.account.findMany({
+      where: { userId },
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: {
+            transferMoneyTransactions: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        accounts,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalAccounts,
+          totalPages: Math.ceil(totalAccounts / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user accounts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all add money transactions for a specific user
+ * @route GET /api/admin/users/:userId/add-money-transactions
+ * @access Private (Admin only)
+ */
+const getUserAddMoneyTransactions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status, page = 1, limit = 10 } = req.query;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Build where clause for filtering
+    const where = { userId };
+    if (status) {
+      where.status = status.toUpperCase();
+    }
+
+    // Get total count for pagination
+    const totalTransactions = await prisma.addMoneyTransaction.count({
+      where
+    });
+
+    // Get user add money transactions with pagination
+    const transactions = await prisma.addMoneyTransaction.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        allTransaction: {
+          select: {
+            orderId: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        transactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalTransactions,
+          totalPages: Math.ceil(totalTransactions / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user add money transactions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all transfer money transactions for a specific user
+ * @route GET /api/admin/users/:userId/transfer-money-transactions
+ * @access Private (Admin only)
+ */
+const getUserTransferMoneyTransactions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status, page = 1, limit = 10 } = req.query;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Build where clause for filtering
+    const where = { userId };
+    if (status) {
+      where.status = status.toUpperCase();
+    }
+
+    // Get total count for pagination
+    const totalTransactions = await prisma.transferMoneyTransaction.count({
+      where
+    });
+
+    // Get user transfer money transactions with pagination
+    const transactions = await prisma.transferMoneyTransaction.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        account: {
+          select: {
+            accountHolderName: true,
+            accountNumber: true,
+            ifscCode: true
+          }
+        },
+        allTransaction: {
+          select: {
+            orderId: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        transactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalTransactions,
+          totalPages: Math.ceil(totalTransactions / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user transfer money transactions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all transactions for a specific user
+ * @route GET /api/admin/users/:userId/all-transactions
+ * @access Private (Admin only)
+ */
+const getUserAllTransactions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { transactionType, page = 1, limit = 10 } = req.query;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Build where clause for filtering
+    const where = { userId };
+    if (transactionType) {
+      where.transactionType = transactionType.toUpperCase();
+    }
+
+    // Get total count for pagination
+    const totalTransactions = await prisma.allTransaction.count({
+      where
+    });
+
+    // Get user all transactions with pagination
+    const transactions = await prisma.allTransaction.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        addMoneyTransaction: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            transactionId: true,
+            location: true,
+            description: true
+          }
+        },
+        transferMoneyTransaction: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            description: true,
+            account: {
+              select: {
+                id: true,
+                accountHolderName: true,
+                accountNumber: true,
+                ifscCode: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        transactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalTransactions,
+          totalPages: Math.ceil(totalTransactions / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user all transactions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllUsersWithDetails,
   getUserDetailById,
-  getDashboardStats
+  getDashboardStats,
+  getUserAccounts,
+  getUserAddMoneyTransactions,
+  getUserTransferMoneyTransactions,
+  getUserAllTransactions
 }; 
