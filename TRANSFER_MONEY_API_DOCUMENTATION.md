@@ -118,6 +118,7 @@ GET /api/transfer-money/my-transactions?status=COMPLETED&page=1&limit=5
         "accountId": "acc123abc456",
         "amount": 500.00,
         "description": "Monthly rent payment",
+        "transactionId": "TXN1234567890",
         "userId": "user123",
         "status": "COMPLETED",
         "createdAt": "2024-01-15T10:30:00.000Z",
@@ -173,6 +174,7 @@ GET /api/transfer-money/tm123abc456
     "accountId": "acc123abc456",
     "amount": 500.00,
     "description": "Monthly rent payment",
+    "transactionId": "TXN1234567890",
     "userId": "user123",
     "status": "COMPLETED",
     "createdAt": "2024-01-15T10:30:00.000Z",
@@ -274,18 +276,26 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 
 ---
 
-### 5. Update Transaction to Processing (Admin)
+### 5. Update Transaction Status to Processing (Admin)
 
 **Endpoint:** `PUT /api/transfer-money/admin/:id/processing`
 
-**Description:** Updates a pending transfer transaction to processing status
+**Description:** Updates a transfer money transaction status from PENDING to PROCESSING and assigns a transaction ID
 
 **Authentication:** Required (Admin)
 
 **URL Parameters:**
 - `id` (string, required): The transfer money transaction ID
 
-**Request Body:** None required
+**Request Body:**
+```json
+{
+  "transactionId": "TXN1234567890"
+}
+```
+
+**Request Body Parameters:**
+- `transactionId` (string, required): A unique transaction ID for tracking the transaction
 
 **Sample Response (Success - 200):**
 ```json
@@ -297,6 +307,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
     "accountId": "acc123abc456",
     "amount": 500.00,
     "description": "Monthly rent payment",
+    "transactionId": "TXN1234567890",
     "userId": "user123",
     "status": "PROCESSING",
     "createdAt": "2024-01-15T10:30:00.000Z",
@@ -314,6 +325,14 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
       "lastName": "Doe"
     }
   }
+}
+```
+
+**Sample Response (Error - 400):**
+```json
+{
+  "success": false,
+  "message": "Transaction ID is required"
 }
 ```
 

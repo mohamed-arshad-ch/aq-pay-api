@@ -102,6 +102,7 @@ Authorization: Bearer <your_jwt_token>
   "status": "PENDING|PROCESSING|COMPLETED|REJECTED",
   "description": "Transaction description",
   "createdAt": "2024-06-30T15:45:00.000Z",
+  "transactionId": "TXN1234567890",
   "accountHolder": "Recipient's name",
   "accountNumber": "******1234",
   "userName": "User's full name",

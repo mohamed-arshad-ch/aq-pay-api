@@ -67,6 +67,7 @@ const getRecentMapTransactions = async (req, res) => {
         status: true,
         description: true,
         createdAt: true,
+        transactionId: true,
         // Include account data
         account: {
           select: {
@@ -94,6 +95,7 @@ const getRecentMapTransactions = async (req, res) => {
       status: tx.status,
       description: tx.description || `Transfer to ${tx.account.accountHolderName || 'account ending with ' + tx.account.accountNumber.slice(-4)}`,
       createdAt: tx.createdAt,
+      transactionId: tx.transactionId,
       accountHolder: tx.account.accountHolderName,
       accountNumber: tx.account.accountNumber.slice(-4).padStart(tx.account.accountNumber.length, '*'), // Masked account number
       userName: `${tx.user.firstName || ''} ${tx.user.lastName || ''}`.trim(),

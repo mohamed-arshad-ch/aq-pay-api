@@ -242,6 +242,15 @@ const getAllTransferMoneyTransactions = async (req, res) => {
 const updateToProcessing = async (req, res) => {
   try {
     const { id } = req.params;
+    const { transactionId } = req.body;
+
+    // Validate transaction ID
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction ID is required'
+      });
+    }
 
     // Check if transaction exists and is in PENDING status
     const existingTransaction = await prisma.transferMoneyTransaction.findUnique({
@@ -265,11 +274,12 @@ const updateToProcessing = async (req, res) => {
       });
     }
 
-    // Update transaction status to PROCESSING
+    // Update transaction status to PROCESSING and set the transaction ID
     const updatedTransaction = await prisma.transferMoneyTransaction.update({
       where: { id },
       data: {
         status: 'PROCESSING',
+        transactionId: transactionId,
         updatedAt: new Date()
       },
       include: {
