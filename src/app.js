@@ -13,6 +13,7 @@ const allTransactionRoutes = require('./routes/allTransactionRoutes');
 const transactionStatusRoutes = require('./routes/transactionStatusRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const pushTokenRoutes = require('./routes/pushTokenRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/transactions', allTransactionRoutes);
 app.use('/api/transaction-status', transactionStatusRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/push-tokens', pushTokenRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -77,6 +79,12 @@ app.get('/', (req, res) => {
       getNotificationStats: 'GET /api/notifications/admin/stats (admin)',
       adminMarkAsRead: 'PUT /api/notifications/admin/:id/read (admin)',
       adminDeleteNotification: 'DELETE /api/notifications/admin/:id (admin)',
+      
+      // Push Token endpoints
+      savePushToken: 'POST /api/push-tokens (user/admin) - body: {token, deviceInfo?}',
+      getMyPushTokens: 'GET /api/push-tokens/my-tokens (user/admin)',
+      deletePushToken: 'DELETE /api/push-tokens (user/admin) - body: {token}',
+      getAllPushTokens: 'GET /api/push-tokens/admin/all (admin)',
       
       // Account Management endpoints (user role only)
       createAccount: 'POST /api/accounts (user)',
