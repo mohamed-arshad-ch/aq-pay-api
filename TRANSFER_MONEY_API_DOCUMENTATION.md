@@ -245,6 +245,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
         "accountId": "acc123abc456",
         "amount": 500.00,
         "description": "Monthly rent payment",
+        "transactionId": "TXN1234567890",
         "userId": "user123",
         "status": "PENDING",
         "createdAt": "2024-01-15T10:30:00.000Z",
