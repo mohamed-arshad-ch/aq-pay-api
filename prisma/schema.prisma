@@ -162,6 +162,13 @@ model Notification {
   type            NotificationType
   isRead          Boolean           @default(false)
   relatedId       String?           // ID of related entity (transaction, user, etc.)
+  
+  // Specific type-based ID fields
+  registrationUserId       String?  // For REGISTRATION notifications - stores the registered user ID
+  portalAccessUserId       String?  // For PORTAL_ACCESS notifications - stores the user ID whose access was approved/denied
+  addMoneyTransactionId    String?  // For ADD_MONEY notifications - stores add money transaction ID
+  transferMoneyTransactionId String? // For TRANSFER_MONEY notifications - stores transfer money transaction ID
+  
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   

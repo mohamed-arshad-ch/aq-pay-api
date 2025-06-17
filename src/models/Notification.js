@@ -7,7 +7,17 @@ class Notification {
    * @returns {Promise<object>} - Created notification
    */
   static async create(data) {
-    const { userId, title, message, type, relatedId = null } = data;
+    const { 
+      userId, 
+      title, 
+      message, 
+      type, 
+      relatedId = null,
+      registrationUserId = null,
+      portalAccessUserId = null,
+      addMoneyTransactionId = null,
+      transferMoneyTransactionId = null
+    } = data;
     
     const notification = await prisma.notification.create({
       data: {
@@ -16,6 +26,10 @@ class Notification {
         message,
         type,
         relatedId,
+        registrationUserId,
+        portalAccessUserId,
+        addMoneyTransactionId,
+        transferMoneyTransactionId,
         isRead: false
       }
     });
@@ -33,7 +47,8 @@ class Notification {
       userId,
       title: 'Registration Successful',
       message: 'Your registration was successful. Please wait for admin approval to access the portal.',
-      type: 'REGISTRATION'
+      type: 'REGISTRATION',
+      registrationUserId: userId  // Store the registered user ID
     });
   }
 
@@ -50,7 +65,8 @@ class Notification {
       message: approved 
         ? 'Your request for portal access has been approved. You can now login and use the platform.' 
         : 'Your request for portal access has been denied. Please contact support for more information.',
-      type: 'PORTAL_ACCESS'
+      type: 'PORTAL_ACCESS',
+      portalAccessUserId: userId  // Store the user ID whose access was approved/denied
     });
   }
 
@@ -59,10 +75,10 @@ class Notification {
    * @param {string} userId - User ID
    * @param {string} status - Transaction status
    * @param {number} amount - Transaction amount
-   * @param {string} transactionId - Add Money Transaction ID
+   * @param {string} addMoneyTransactionId - Add Money Transaction ID
    * @returns {Promise<object>} - Created notification
    */
-  static async createAddMoneyNotification(userId, status, amount, transactionId) {
+  static async createAddMoneyNotification(userId, status, amount, addMoneyTransactionId) {
     let title, message;
     
     switch (status) {
@@ -92,7 +108,7 @@ class Notification {
       title,
       message,
       type: 'ADD_MONEY',
-      relatedId: transactionId
+      addMoneyTransactionId: addMoneyTransactionId  // Store the add money transaction ID
     });
   }
 
@@ -102,10 +118,10 @@ class Notification {
    * @param {string} status - Transaction status
    * @param {number} amount - Transaction amount
    * @param {string} accountNumber - Account number (last 4 digits)
-   * @param {string} transactionId - Transfer Money Transaction ID
+   * @param {string} transferMoneyTransactionId - Transfer Money Transaction ID
    * @returns {Promise<object>} - Created notification
    */
-  static async createTransferMoneyNotification(userId, status, amount, accountNumber, transactionId) {
+  static async createTransferMoneyNotification(userId, status, amount, accountNumber, transferMoneyTransactionId) {
     // Mask account number to show only last 4 digits
     const maskedAccount = accountNumber.slice(-4).padStart(accountNumber.length, '*');
     let title, message;
@@ -137,7 +153,23 @@ class Notification {
       title,
       message,
       type: 'TRANSFER_MONEY',
-      relatedId: transactionId
+      transferMoneyTransactionId: transferMoneyTransactionId  // Store the transfer money transaction ID
+    });
+  }
+
+  /**
+   * Create system notification
+   * @param {string} userId - User ID
+   * @param {string} title - Notification title
+   * @param {string} message - Notification message
+   * @returns {Promise<object>} - Created notification
+   */
+  static async createSystemNotification(userId, title, message) {
+    return await this.create({
+      userId,
+      title,
+      message,
+      type: 'SYSTEM'
     });
   }
 

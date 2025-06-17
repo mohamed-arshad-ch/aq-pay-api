@@ -193,6 +193,10 @@ Authorization: Bearer <your_jwt_token>
         "type": "ADD_MONEY",
         "isRead": false,
         "relatedId": "transaction123",
+        "registrationUserId": null,
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": "addmoney456",
+        "transferMoneyTransactionId": null,
         "createdAt": "2024-01-15T11:30:00.000Z",
         "updatedAt": "2024-01-15T11:30:00.000Z",
         "user": {
@@ -211,6 +215,10 @@ Authorization: Bearer <your_jwt_token>
         "type": "TRANSFER_MONEY",
         "isRead": true,
         "relatedId": "transfer123",
+        "registrationUserId": null,
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": "transfer789",
         "createdAt": "2024-01-14T10:30:00.000Z",
         "updatedAt": "2024-01-14T11:00:00.000Z",
         "user": {
@@ -309,6 +317,10 @@ Authorization: Bearer <your_jwt_token>
     "type": "ADD_MONEY",
     "isRead": true,
     "relatedId": "transaction123",
+    "registrationUserId": null,
+    "portalAccessUserId": null,
+    "addMoneyTransactionId": "addmoney456",
+    "transferMoneyTransactionId": null,
     "createdAt": "2024-01-15T11:30:00.000Z",
     "updatedAt": "2024-01-15T12:00:00.000Z"
   }
@@ -404,6 +416,45 @@ The system automatically generates notifications for the following events:
 ### 5. System Notifications (`SYSTEM`)
 - System-generated notifications that don't fit into other categories
 - Used for important announcements and system updates
+
+---
+
+## Notification Schema Fields
+
+Each notification in the system contains the following fields:
+
+### Core Fields
+- `id`: Unique notification identifier
+- `userId`: ID of the user who receives the notification
+- `title`: Notification title
+- `message`: Notification message content
+- `type`: Notification type (REGISTRATION, PORTAL_ACCESS, ADD_MONEY, TRANSFER_MONEY, SYSTEM)
+- `isRead`: Boolean indicating if the notification has been read
+- `createdAt`: Timestamp when notification was created
+- `updatedAt`: Timestamp when notification was last updated
+
+### Legacy Field
+- `relatedId`: Generic ID field for backward compatibility (deprecated)
+
+### Type-Specific ID Fields
+These fields store specific IDs based on the notification type:
+
+- `registrationUserId`: For REGISTRATION notifications - stores the registered user's ID
+- `portalAccessUserId`: For PORTAL_ACCESS notifications - stores the user ID whose portal access was approved/denied
+- `addMoneyTransactionId`: For ADD_MONEY notifications - stores the add money transaction ID
+- `transferMoneyTransactionId`: For TRANSFER_MONEY notifications - stores the transfer money transaction ID
+
+### Field Usage by Notification Type
+
+| Notification Type | Populated Fields |
+|-------------------|------------------|
+| REGISTRATION | `registrationUserId` (user ID who registered) |
+| PORTAL_ACCESS | `portalAccessUserId` (user ID whose access was approved/denied) |
+| ADD_MONEY | `addMoneyTransactionId` (ID from add_money_transactions table) |
+| TRANSFER_MONEY | `transferMoneyTransactionId` (ID from transfer_money_transactions table) |
+| SYSTEM | None (general system notifications) |
+
+**Note:** The system uses dedicated transaction table IDs (not the generic transaction IDs) for add money and transfer money notifications as per the updated requirements.
 
 ### 6. Get Unread Notification Count
 
