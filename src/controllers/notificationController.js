@@ -19,7 +19,7 @@ const getMyNotifications = async (req, res) => {
     const where = { userId };
     
     if (unreadOnly === 'true' || unreadOnly === true) {
-      where.isRead = false;
+      where.isReadByUser = false;
     }
     
     // Get notifications with enhanced details
@@ -188,7 +188,7 @@ const getAllNotifications = async (req, res) => {
     }
     
     if (unreadOnly === 'true' || unreadOnly === true) {
-      where.isRead = false;
+      where.isReadByAdmin = false;
     }
     
     // Get notifications with user info
@@ -318,11 +318,11 @@ const getAllNotifications = async (req, res) => {
     // Get total count for pagination
     const totalCount = await prisma.notification.count({ where });
     
-    // Get total unread count
+    // Get total unread count for admin
     const totalUnreadCount = await prisma.notification.count({
       where: {
         ...where,
-        isRead: false
+        isReadByAdmin: false
       }
     });
 
@@ -367,7 +367,7 @@ const getNotificationStats = async (req, res) => {
       systemNotifications
     ] = await Promise.all([
       prisma.notification.count(),
-      prisma.notification.count({ where: { isRead: false } }),
+      prisma.notification.count({ where: { isReadByAdmin: false } }),
       prisma.notification.count({ where: { type: 'REGISTRATION' } }),
       prisma.notification.count({ where: { type: 'PORTAL_ACCESS' } }),
       prisma.notification.count({ where: { type: 'ADD_MONEY' } }),
@@ -440,7 +440,7 @@ const getNotificationStats = async (req, res) => {
 };
 
 /**
- * Mark a notification as read
+ * Mark a notification as read by user
  * @route PUT /api/notifications/:id/read
  * @access Private (User/Admin)
  */
@@ -460,12 +460,12 @@ const markAsRead = async (req, res) => {
       });
     }
 
-    // Mark as read
-    const updatedNotification = await Notification.markAsRead(id);
+    // Mark as read by user
+    const updatedNotification = await Notification.markAsReadByUser(id);
 
     res.status(200).json({
       success: true,
-      message: 'Notification marked as read',
+      message: 'Notification marked as read by user',
       data: updatedNotification
     });
   } catch (error) {
@@ -479,7 +479,7 @@ const markAsRead = async (req, res) => {
 };
 
 /**
- * Mark all notifications as read
+ * Mark all notifications as read by user
  * @route PUT /api/notifications/mark-all-read
  * @access Private (User/Admin)
  */
@@ -487,12 +487,12 @@ const markAllAsRead = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Mark all as read
-    const result = await Notification.markAllAsRead(userId);
+    // Mark all as read by user
+    const result = await Notification.markAllAsReadByUser(userId);
 
     res.status(200).json({
       success: true,
-      message: `${result.count} notifications marked as read`,
+      message: `${result.count} notifications marked as read by user`,
       data: result
     });
   } catch (error) {
@@ -544,7 +544,7 @@ const deleteNotification = async (req, res) => {
 };
 
 /**
- * Admin: Mark notification as read for any user
+ * Admin: Mark notification as read by admin
  * @route PUT /api/notifications/admin/:id/read
  * @access Private (Admin only)
  */
@@ -564,8 +564,8 @@ const adminMarkAsRead = async (req, res) => {
       });
     }
 
-    // Mark as read
-    const updatedNotification = await Notification.markAsRead(id);
+    // Mark as read by admin
+    const updatedNotification = await Notification.markAsReadByAdmin(id);
 
     res.status(200).json({
       success: true,
@@ -574,6 +574,31 @@ const adminMarkAsRead = async (req, res) => {
     });
   } catch (error) {
     console.error('Error marking notification as read by admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Admin: Mark all notifications as read by admin
+ * @route PUT /api/notifications/admin/mark-all-read
+ * @access Private (Admin only)
+ */
+const adminMarkAllAsRead = async (req, res) => {
+  try {
+    // Mark all notifications as read by admin
+    const result = await Notification.markAllAsReadByAdmin();
+
+    res.status(200).json({
+      success: true,
+      message: `${result.count} notifications marked as read by admin`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read by admin:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -655,20 +680,16 @@ const getUnreadNotificationCount = async (req, res) => {
  */
 const getTotalUnreadCount = async (req, res) => {
   try {
-    // Get total unread count
-    const totalUnreadCount = await prisma.notification.count({
-      where: {
-        isRead: false
-      }
-    });
+    // Get total unread count for admin
+    const totalUnreadCount = await Notification.getUnreadCountForAdmin();
     
-    // Get unread counts by type
+    // Get unread counts by type for admin
     const typeUnreadCounts = await Promise.all([
-      prisma.notification.count({ where: { type: 'REGISTRATION', isRead: false } }),
-      prisma.notification.count({ where: { type: 'PORTAL_ACCESS', isRead: false } }),
-      prisma.notification.count({ where: { type: 'ADD_MONEY', isRead: false } }),
-      prisma.notification.count({ where: { type: 'TRANSFER_MONEY', isRead: false } }),
-      prisma.notification.count({ where: { type: 'SYSTEM', isRead: false } })
+      prisma.notification.count({ where: { type: 'REGISTRATION', isReadByAdmin: false } }),
+      prisma.notification.count({ where: { type: 'PORTAL_ACCESS', isReadByAdmin: false } }),
+      prisma.notification.count({ where: { type: 'ADD_MONEY', isReadByAdmin: false } }),
+      prisma.notification.count({ where: { type: 'TRANSFER_MONEY', isReadByAdmin: false } }),
+      prisma.notification.count({ where: { type: 'SYSTEM', isReadByAdmin: false } })
     ]);
     
     res.status(200).json({
@@ -702,6 +723,7 @@ module.exports = {
   markAllAsRead,
   deleteNotification,
   adminMarkAsRead,
+  adminMarkAllAsRead,
   adminDeleteNotification,
   getUnreadNotificationCount,
   getTotalUnreadCount

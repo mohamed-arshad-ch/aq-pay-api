@@ -9,6 +9,7 @@ const {
   markAllAsRead,
   deleteNotification,
   adminMarkAsRead,
+  adminMarkAllAsRead,
   adminDeleteNotification,
   getUnreadNotificationCount,
   getTotalUnreadCount
@@ -76,6 +77,13 @@ router.get('/admin/unread-count', authenticateToken, requireAdmin, getTotalUnrea
  * @access  Private (Admin only)
  */
 router.put('/admin/:id/read', authenticateToken, requireAdmin, adminMarkAsRead);
+
+/**
+ * @route   PUT /api/notifications/admin/mark-all-read
+ * @desc    Admin can mark all notifications as read
+ * @access  Private (Admin only)
+ */
+router.put('/admin/mark-all-read', authenticateToken, requireAdmin, adminMarkAllAsRead);
 
 /**
  * @route   DELETE /api/notifications/admin/:id

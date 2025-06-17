@@ -161,7 +161,9 @@ model Notification {
   title           String
   message         String
   type            NotificationType
-  isRead          Boolean           @default(false)
+  isRead          Boolean           @default(false)  // Deprecated - kept for backward compatibility
+  isReadByUser    Boolean           @default(false)  // Read status for the user
+  isReadByAdmin   Boolean           @default(false)  // Read status for admin
   relatedId       String?           // ID of related entity (transaction, user, etc.)
   
   // Specific type-based ID fields

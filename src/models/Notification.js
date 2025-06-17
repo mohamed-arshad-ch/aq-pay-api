@@ -185,7 +185,7 @@ class Notification {
     const whereCondition = { userId };
     
     if (unreadOnly) {
-      whereCondition.isRead = false;
+      whereCondition.isReadByUser = false;
     }
 
     const notifications = await prisma.notification.findMany({
@@ -207,7 +207,7 @@ class Notification {
     const count = await prisma.notification.count({
       where: {
         userId,
-        isRead: false
+        isReadByUser: false
       }
     });
 
@@ -215,36 +215,89 @@ class Notification {
   }
 
   /**
-   * Mark notification as read
+   * Mark notification as read by user
    * @param {string} id - Notification ID
    * @returns {Promise<object>} - Updated notification
    */
-  static async markAsRead(id) {
+  static async markAsReadByUser(id) {
     const notification = await prisma.notification.update({
       where: { id },
-      data: { isRead: true }
+      data: { 
+        isReadByUser: true,
+        isRead: true // Keep backward compatibility
+      }
     });
 
     return notification;
   }
 
   /**
-   * Mark all notifications as read for a user
+   * Mark notification as read by admin
+   * @param {string} id - Notification ID
+   * @returns {Promise<object>} - Updated notification
+   */
+  static async markAsReadByAdmin(id) {
+    const notification = await prisma.notification.update({
+      where: { id },
+      data: { 
+        isReadByAdmin: true,
+        isRead: true // Keep backward compatibility
+      }
+    });
+
+    return notification;
+  }
+
+  /**
+   * Mark all notifications as read by user
    * @param {string} userId - User ID
    * @returns {Promise<object>} - Result
    */
-  static async markAllAsRead(userId) {
+  static async markAllAsReadByUser(userId) {
     const result = await prisma.notification.updateMany({
       where: {
         userId,
-        isRead: false
+        isReadByUser: false
       },
       data: {
-        isRead: true
+        isReadByUser: true,
+        isRead: true // Keep backward compatibility
       }
     });
 
     return result;
+  }
+
+  /**
+   * Mark all notifications as read by admin for all users
+   * @returns {Promise<object>} - Result
+   */
+  static async markAllAsReadByAdmin() {
+    const result = await prisma.notification.updateMany({
+      where: {
+        isReadByAdmin: false
+      },
+      data: {
+        isReadByAdmin: true,
+        isRead: true // Keep backward compatibility
+      }
+    });
+
+    return result;
+  }
+
+  /**
+   * Get count of unread notifications for admin (across all users)
+   * @returns {Promise<number>} - Count of unread notifications
+   */
+  static async getUnreadCountForAdmin() {
+    const count = await prisma.notification.count({
+      where: {
+        isReadByAdmin: false
+      }
+    });
+
+    return count;
   }
 
   /**
