@@ -205,6 +205,24 @@ Authorization: Bearer <your_jwt_token>
           "firstName": "John",
           "lastName": "Doe",
           "role": "USER"
+        },
+        "addMoneyTransactionDetails": {
+          "id": "addmoney456",
+          "amount": "500.00",
+          "location": "Mumbai",
+          "description": "Emergency funds",
+          "transactionId": "PAY123456789",
+          "status": "COMPLETED",
+          "userId": "user123",
+          "createdAt": "2024-01-15T11:00:00.000Z",
+          "updatedAt": "2024-01-15T11:30:00.000Z",
+          "user": {
+            "id": "user123",
+            "email": "user@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "phoneNumber": "+919876543210"
+          }
         }
       },
       {
@@ -227,6 +245,95 @@ Authorization: Bearer <your_jwt_token>
           "firstName": "Jane",
           "lastName": "Smith",
           "role": "USER"
+        },
+        "transferMoneyTransactionDetails": {
+          "id": "transfer789",
+          "accountId": "acc123",
+          "amount": "200.00",
+          "description": "Payment to vendor",
+          "transactionId": "TXN987654321",
+          "status": "PROCESSING",
+          "userId": "user456",
+          "createdAt": "2024-01-14T10:00:00.000Z",
+          "updatedAt": "2024-01-14T10:30:00.000Z",
+          "user": {
+            "id": "user456",
+            "email": "jane@example.com",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "phoneNumber": "+919876543211"
+          },
+          "account": {
+            "id": "acc123",
+            "accountHolderName": "ABC Vendor",
+            "accountNumber": "1234567890125678",
+            "ifscCode": "HDFC0001234"
+          }
+        }
+      },
+      {
+        "id": "notif125",
+        "userId": "user789",
+        "title": "Registration Successful",
+        "message": "Your registration was successful. Please wait for admin approval to access the portal.",
+        "type": "REGISTRATION",
+        "isRead": false,
+        "relatedId": null,
+        "registrationUserId": "user789",
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": null,
+        "createdAt": "2024-01-13T09:30:00.000Z",
+        "updatedAt": "2024-01-13T09:30:00.000Z",
+        "user": {
+          "id": "user789",
+          "email": "newuser@example.com",
+          "firstName": "New",
+          "lastName": "User",
+          "role": "USER"
+        },
+        "registrationDetails": {
+          "id": "user789",
+          "email": "newuser@example.com",
+          "firstName": "New",
+          "lastName": "User",
+          "phoneNumber": "+919876543212",
+          "role": "USER",
+          "isPortalAccess": false,
+          "createdAt": "2024-01-13T09:30:00.000Z"
+        }
+      },
+      {
+        "id": "notif126",
+        "userId": "user101",
+        "title": "Portal Access Approved",
+        "message": "Your request for portal access has been approved. You can now login and use the platform.",
+        "type": "PORTAL_ACCESS",
+        "isRead": false,
+        "relatedId": null,
+        "registrationUserId": null,
+        "portalAccessUserId": "user101",
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": null,
+        "createdAt": "2024-01-12T14:30:00.000Z",
+        "updatedAt": "2024-01-12T14:30:00.000Z",
+        "user": {
+          "id": "user101",
+          "email": "approved@example.com",
+          "firstName": "Approved",
+          "lastName": "User",
+          "role": "USER"
+        },
+        "portalAccessDetails": {
+          "id": "user101",
+          "email": "approved@example.com",
+          "firstName": "Approved",
+          "lastName": "User",
+          "phoneNumber": "+919876543213",
+          "role": "USER",
+          "isPortalAccess": true,
+          "createdAt": "2024-01-10T10:30:00.000Z",
+          "updatedAt": "2024-01-12T14:30:00.000Z"
         }
       }
     ],
@@ -472,3 +579,188 @@ These fields store specific IDs based on the notification type:
     "unreadCount": 5
   }
 } 
+```
+
+## Enhanced Admin Notification API
+
+The admin notification API now includes related transaction/user details based on the notification type:
+
+### Sample Enhanced Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "notifications": [
+      {
+        "id": "notif123",
+        "userId": "user123",
+        "title": "Money Added Successfully",
+        "message": "₹500.00 has been successfully added to your wallet.",
+        "type": "ADD_MONEY",
+        "isRead": false,
+        "relatedId": "transaction123",
+        "registrationUserId": null,
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": "addmoney456",
+        "transferMoneyTransactionId": null,
+        "createdAt": "2024-01-15T11:30:00.000Z",
+        "updatedAt": "2024-01-15T11:30:00.000Z",
+        "user": {
+          "id": "user123",
+          "email": "user@example.com",
+          "firstName": "John",
+          "lastName": "Doe",
+          "role": "USER"
+        },
+        "addMoneyTransactionDetails": {
+          "id": "addmoney456",
+          "amount": "500.00",
+          "location": "Mumbai",
+          "description": "Emergency funds",
+          "transactionId": "PAY123456789",
+          "status": "COMPLETED",
+          "userId": "user123",
+          "createdAt": "2024-01-15T11:00:00.000Z",
+          "updatedAt": "2024-01-15T11:30:00.000Z",
+          "user": {
+            "id": "user123",
+            "email": "user@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "phoneNumber": "+919876543210"
+          }
+        }
+      },
+      {
+        "id": "notif124",
+        "userId": "user456",
+        "title": "Transfer Request Processing",
+        "message": "Your request to transfer ₹200.00 to account ending with ****5678 is now being processed.",
+        "type": "TRANSFER_MONEY",
+        "isRead": true,
+        "relatedId": "transfer123",
+        "registrationUserId": null,
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": "transfer789",
+        "createdAt": "2024-01-14T10:30:00.000Z",
+        "updatedAt": "2024-01-14T11:00:00.000Z",
+        "user": {
+          "id": "user456",
+          "email": "jane@example.com",
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "role": "USER"
+        },
+        "transferMoneyTransactionDetails": {
+          "id": "transfer789",
+          "accountId": "acc123",
+          "amount": "200.00",
+          "description": "Payment to vendor",
+          "transactionId": "TXN987654321",
+          "status": "PROCESSING",
+          "userId": "user456",
+          "createdAt": "2024-01-14T10:00:00.000Z",
+          "updatedAt": "2024-01-14T10:30:00.000Z",
+          "user": {
+            "id": "user456",
+            "email": "jane@example.com",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "phoneNumber": "+919876543211"
+          },
+          "account": {
+            "id": "acc123",
+            "accountHolderName": "ABC Vendor",
+            "accountNumber": "1234567890125678",
+            "ifscCode": "HDFC0001234"
+          }
+        }
+      },
+      {
+        "id": "notif125",
+        "userId": "user789",
+        "title": "Registration Successful",
+        "message": "Your registration was successful. Please wait for admin approval to access the portal.",
+        "type": "REGISTRATION",
+        "isRead": false,
+        "relatedId": null,
+        "registrationUserId": "user789",
+        "portalAccessUserId": null,
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": null,
+        "createdAt": "2024-01-13T09:30:00.000Z",
+        "updatedAt": "2024-01-13T09:30:00.000Z",
+        "user": {
+          "id": "user789",
+          "email": "newuser@example.com",
+          "firstName": "New",
+          "lastName": "User",
+          "role": "USER"
+        },
+        "registrationDetails": {
+          "id": "user789",
+          "email": "newuser@example.com",
+          "firstName": "New",
+          "lastName": "User",
+          "phoneNumber": "+919876543212",
+          "role": "USER",
+          "isPortalAccess": false,
+          "createdAt": "2024-01-13T09:30:00.000Z"
+        }
+      },
+      {
+        "id": "notif126",
+        "userId": "user101",
+        "title": "Portal Access Approved",
+        "message": "Your request for portal access has been approved. You can now login and use the platform.",
+        "type": "PORTAL_ACCESS",
+        "isRead": false,
+        "relatedId": null,
+        "registrationUserId": null,
+        "portalAccessUserId": "user101",
+        "addMoneyTransactionId": null,
+        "transferMoneyTransactionId": null,
+        "createdAt": "2024-01-12T14:30:00.000Z",
+        "updatedAt": "2024-01-12T14:30:00.000Z",
+        "user": {
+          "id": "user101",
+          "email": "approved@example.com",
+          "firstName": "Approved",
+          "lastName": "User",
+          "role": "USER"
+        },
+        "portalAccessDetails": {
+          "id": "user101",
+          "email": "approved@example.com",
+          "firstName": "Approved",
+          "lastName": "User",
+          "phoneNumber": "+919876543213",
+          "role": "USER",
+          "isPortalAccess": true,
+          "createdAt": "2024-01-10T10:30:00.000Z",
+          "updatedAt": "2024-01-12T14:30:00.000Z"
+        }
+      }
+    ],
+    "totalUnreadCount": 45,
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 125,
+      "totalPages": 13
+    }
+  }
+}
+```
+
+### Enhanced Fields by Notification Type
+
+| Notification Type | Additional Field | Contains |
+|-------------------|------------------|----------|
+| `REGISTRATION` | `registrationDetails` | Complete user details of the registered user |
+| `PORTAL_ACCESS` | `portalAccessDetails` | User details including current portal access status |
+| `ADD_MONEY` | `addMoneyTransactionDetails` | Complete add money transaction with user info |
+| `TRANSFER_MONEY` | `transferMoneyTransactionDetails` | Complete transfer transaction with user and account info |
+| `SYSTEM` | None | No additional details for system notifications | 

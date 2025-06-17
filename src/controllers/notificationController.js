@@ -58,7 +58,7 @@ const getMyNotifications = async (req, res) => {
 };
 
 /**
- * Get all notifications (Admin only)
+ * Get all notifications (Admin only) - Enhanced with related details
  * @route GET /api/notifications/admin/all
  * @access Private (Admin only)
  */
@@ -103,6 +103,111 @@ const getAllNotifications = async (req, res) => {
       }
     });
     
+    // Enhance notifications with related details based on type
+    const enhancedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        const enhancedNotification = { ...notification };
+        
+        switch (notification.type) {
+          case 'REGISTRATION':
+            if (notification.registrationUserId) {
+              const registrationUser = await prisma.user.findUnique({
+                where: { id: notification.registrationUserId },
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phoneNumber: true,
+                  role: true,
+                  isPortalAccess: true,
+                  createdAt: true
+                }
+              });
+              enhancedNotification.registrationDetails = registrationUser;
+            }
+            break;
+            
+          case 'PORTAL_ACCESS':
+            if (notification.portalAccessUserId) {
+              const portalUser = await prisma.user.findUnique({
+                where: { id: notification.portalAccessUserId },
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phoneNumber: true,
+                  role: true,
+                  isPortalAccess: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              });
+              enhancedNotification.portalAccessDetails = portalUser;
+            }
+            break;
+            
+          case 'ADD_MONEY':
+            if (notification.addMoneyTransactionId) {
+              const addMoneyTransaction = await prisma.addMoneyTransaction.findUnique({
+                where: { id: notification.addMoneyTransactionId },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      firstName: true,
+                      lastName: true,
+                      phoneNumber: true
+                    }
+                  }
+                }
+              });
+              enhancedNotification.addMoneyTransactionDetails = addMoneyTransaction;
+            }
+            break;
+            
+          case 'TRANSFER_MONEY':
+            if (notification.transferMoneyTransactionId) {
+              const transferMoneyTransaction = await prisma.transferMoneyTransaction.findUnique({
+                where: { id: notification.transferMoneyTransactionId },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      firstName: true,
+                      lastName: true,
+                      phoneNumber: true
+                    }
+                  },
+                  account: {
+                    select: {
+                      id: true,
+                      accountHolderName: true,
+                      accountNumber: true,
+                      ifscCode: true
+                    }
+                  }
+                }
+              });
+              enhancedNotification.transferMoneyTransactionDetails = transferMoneyTransaction;
+            }
+            break;
+            
+          case 'SYSTEM':
+            // System notifications don't have additional details
+            break;
+            
+          default:
+            break;
+        }
+        
+        return enhancedNotification;
+      })
+    );
+    
     // Get total count for pagination
     const totalCount = await prisma.notification.count({ where });
     
@@ -117,7 +222,7 @@ const getAllNotifications = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        notifications,
+        notifications: enhancedNotifications,
         totalUnreadCount,
         pagination: {
           page: parseInt(page),
