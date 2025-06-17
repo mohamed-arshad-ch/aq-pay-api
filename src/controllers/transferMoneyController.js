@@ -1,12 +1,13 @@
 const { PrismaClient } = require('@prisma/client');
 const { generateUniqueOrderId } = require('../utils/orderIdGenerator');
 const Notification = require('../models/Notification');
+const MPin = require('../models/MPin');
 const prisma = new PrismaClient();
 
 // Create a new transfer money transaction
 const createTransferMoneyTransaction = async (req, res) => {
   try {
-    const { accountId, amount, description } = req.body;
+    const { accountId, amount, description, mPin } = req.body;
     const userId = req.user.id;
 
     // Validation
@@ -14,6 +15,34 @@ const createTransferMoneyTransaction = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Account ID and amount are required. Amount must be greater than 0'
+      });
+    }
+
+    // Validate MPin
+    if (!mPin) {
+      return res.status(400).json({
+        success: false,
+        message: 'MPin is required for transfer money transactions'
+      });
+    }
+
+    // Check if user has MPin
+    const hasMPin = await MPin.exists(userId);
+    if (!hasMPin) {
+      return res.status(400).json({
+        success: false,
+        message: 'MPin not found. Please create MPin in settings.',
+        action: 'CREATE_MPIN_IN_SETTINGS'
+      });
+    }
+
+    // Verify MPin
+    const isMPinValid = await MPin.verify(userId, mPin);
+    if (!isMPinValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid MPin. Please enter correct MPin.',
+        action: 'INVALID_MPIN'
       });
     }
 

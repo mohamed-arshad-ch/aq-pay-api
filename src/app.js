@@ -15,6 +15,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const pushTokenRoutes = require('./routes/pushTokenRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const mPinRoutes = require('./routes/mPinRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/push-tokens', pushTokenRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/mpin', mPinRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -32,7 +32,8 @@ Admin endpoints additionally require admin role privileges.
 {
   "accountId": "acc123abc456",
   "amount": 500.00,
-  "description": "Monthly rent payment"
+  "description": "Monthly rent payment",
+  "mPin": "123456"
 }
 ```
 
@@ -40,6 +41,7 @@ Admin endpoints additionally require admin role privileges.
 - `accountId` (string, required): ID of the bank account to transfer money to (must belong to the user)
 - `amount` (number, required): Amount to transfer (must be > 0)
 - `description` (string, optional): Description for the transfer
+- `mPin` (string, required): 6-digit MPin for transaction authorization
 
 **Sample Response (Success - 201):**
 ```json
@@ -79,6 +81,32 @@ Admin endpoints additionally require admin role privileges.
 {
   "success": false,
   "message": "Insufficient wallet balance"
+}
+```
+
+**Sample Response (Error - 400) - MPin required:**
+```json
+{
+  "success": false,
+  "message": "MPin is required for transfer money transactions"
+}
+```
+
+**Sample Response (Error - 400) - No MPin found:**
+```json
+{
+  "success": false,
+  "message": "MPin not found. Please create MPin in settings.",
+  "action": "CREATE_MPIN_IN_SETTINGS"
+}
+```
+
+**Sample Response (Error - 400) - Invalid MPin:**
+```json
+{
+  "success": false,
+  "message": "Invalid MPin. Please enter correct MPin.",
+  "action": "INVALID_MPIN"
 }
 ```
 
@@ -525,6 +553,8 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 - Transfer amount must be greater than 0
 - Account validation ensures the account belongs to the requesting user
 - **Important**: Wallet balance is immediately deducted when transfer is created (PENDING status)
+- **Security**: MPin verification is required for all transfer money transactions
+- User must have created a 6-digit MPin before initiating transfers
 
 ### Transfer Money Approval Process:
 - Only PENDING transactions can be moved to PROCESSING
