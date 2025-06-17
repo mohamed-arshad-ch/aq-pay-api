@@ -51,33 +51,48 @@ const createTransferMoneyTransaction = async (req, res) => {
       });
     }
 
-    // Create the transfer transaction
-    const transaction = await prisma.transferMoneyTransaction.create({
-      data: {
-        accountId: accountId,
-        amount: parseFloat(amount),
-        description: description || null,
-        userId: userId,
-        status: 'PENDING'
-      },
-      include: {
-        account: {
-          select: {
-            id: true,
-            accountHolderName: true,
-            accountNumber: true,
-            ifscCode: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
+    // Use transaction to create transfer and update wallet balance atomically
+    const result = await prisma.$transaction(async (prisma) => {
+      // Deduct amount from wallet immediately when transfer is created
+      const updatedWallet = await prisma.wallet.update({
+        where: { userId: userId },
+        data: {
+          balance: {
+            decrement: parseFloat(amount)
           }
         }
-      }
+      });
+
+      // Create the transfer transaction
+      const transaction = await prisma.transferMoneyTransaction.create({
+        data: {
+          accountId: accountId,
+          amount: parseFloat(amount),
+          description: description || null,
+          userId: userId,
+          status: 'PENDING'
+        },
+        include: {
+          account: {
+            select: {
+              id: true,
+              accountHolderName: true,
+              accountNumber: true,
+              ifscCode: true
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      });
+
+      return { transaction, updatedWallet };
     });
     
     // Create notification for pending transaction
@@ -86,13 +101,16 @@ const createTransferMoneyTransaction = async (req, res) => {
       'PENDING',
       parseFloat(amount),
       account.accountNumber,
-      transaction.id
+      result.transaction.id
     );
 
     res.status(201).json({
       success: true,
-      message: 'Transfer money transaction created successfully',
-      data: transaction
+      message: 'Transfer money transaction created successfully and amount deducted from wallet',
+      data: {
+        transaction: result.transaction,
+        walletBalance: result.updatedWallet.balance
+      }
     });
 
   } catch (error) {
@@ -359,18 +377,11 @@ const approveTransferTransaction = async (req, res) => {
       });
     }
 
-    // Check if user has sufficient balance
-    if (parseFloat(existingTransaction.user.wallet.balance) < parseFloat(existingTransaction.amount)) {
-      return res.status(400).json({
-        success: false,
-        message: 'User has insufficient balance in wallet'
-      });
-    }
-
     // Generate unique order ID
     const orderId = await generateUniqueOrderId();
 
-    // Use transaction to update transaction status, wallet balance, and create all transaction record
+    // Use transaction to update transaction status and create all transaction record
+    // Note: Wallet balance was already deducted when transfer was created in PENDING status
     const result = await prisma.$transaction(async (prisma) => {
       // Update transaction status to COMPLETED
       const updatedTransaction = await prisma.transferMoneyTransaction.update({
@@ -399,14 +410,9 @@ const approveTransferTransaction = async (req, res) => {
         }
       });
 
-      // Update wallet balance (subtract the transfer amount)
-      const updatedWallet = await prisma.wallet.update({
-        where: { userId: existingTransaction.userId },
-        data: {
-          balance: {
-            decrement: existingTransaction.amount
-          }
-        }
+      // Get current wallet for reference (no balance update needed as it was already deducted)
+      const currentWallet = await prisma.wallet.findUnique({
+        where: { userId: existingTransaction.userId }
       });
 
       // Create entry in AllTransaction table
@@ -435,7 +441,7 @@ const approveTransferTransaction = async (req, res) => {
 
       return {
         updatedTransaction,
-        updatedWallet,
+        currentWallet,
         allTransactionEntry
       };
     });
@@ -452,7 +458,11 @@ const approveTransferTransaction = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Transfer approved successfully, money sent to bank account',
-      data: result
+      data: {
+        transaction: result.updatedTransaction,
+        walletBalance: result.currentWallet.balance,
+        allTransactionEntry: result.allTransactionEntry
+      }
     });
 
   } catch (error) {
@@ -486,54 +496,75 @@ const rejectTransferTransaction = async (req, res) => {
       });
     }
 
-    if (existingTransaction.status !== 'PROCESSING') {
+    if (existingTransaction.status !== 'PROCESSING' && existingTransaction.status !== 'PENDING') {
       return res.status(400).json({
         success: false,
-        message: 'Only processing transactions can be rejected'
+        message: 'Only pending and processing transactions can be rejected'
       });
     }
 
-    // Update transaction status to REJECTED
-    const updatedTransaction = await prisma.transferMoneyTransaction.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        description: reason ? `${existingTransaction.description || ''} | Rejection reason: ${reason}` : existingTransaction.description,
-        updatedAt: new Date()
-      },
-      include: {
-        account: {
-          select: {
-            id: true,
-            accountHolderName: true,
-            accountNumber: true,
-            ifscCode: true
-          }
+    // Use transaction to update status and refund wallet balance atomically
+    const result = await prisma.$transaction(async (prisma) => {
+      // Update transaction status to REJECTED
+      const updatedTransaction = await prisma.transferMoneyTransaction.update({
+        where: { id },
+        data: {
+          status: 'REJECTED',
+          description: reason ? `${existingTransaction.description || ''} | Rejection reason: ${reason}` : existingTransaction.description,
+          updatedAt: new Date()
         },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
+        include: {
+          account: {
+            select: {
+              id: true,
+              accountHolderName: true,
+              accountNumber: true,
+              ifscCode: true
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true
+            }
           }
         }
-      }
+      });
+
+      // Add the transfer amount back to user's wallet since transfer was rejected
+      const updatedWallet = await prisma.wallet.update({
+        where: { userId: existingTransaction.userId },
+        data: {
+          balance: {
+            increment: existingTransaction.amount
+          }
+        }
+      });
+
+      return {
+        updatedTransaction,
+        updatedWallet
+      };
     });
     
     // Create notification for rejected status
     await Notification.createTransferMoneyNotification(
-      updatedTransaction.userId,
+      result.updatedTransaction.userId,
       'REJECTED',
-      parseFloat(updatedTransaction.amount),
+      parseFloat(result.updatedTransaction.amount),
       existingTransaction.account.accountNumber,
-      updatedTransaction.id
+      result.updatedTransaction.id
     );
 
     res.status(200).json({
       success: true,
-      message: 'Transfer transaction rejected successfully',
-      data: updatedTransaction
+      message: 'Transfer transaction rejected successfully and amount refunded to wallet',
+      data: {
+        transaction: result.updatedTransaction,
+        walletBalance: result.updatedWallet.balance
+      }
     });
 
   } catch (error) {

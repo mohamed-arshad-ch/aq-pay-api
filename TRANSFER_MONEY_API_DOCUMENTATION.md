@@ -23,7 +23,7 @@ Admin endpoints additionally require admin role privileges.
 
 **Endpoint:** `POST /api/transfer-money/create`
 
-**Description:** Creates a new transfer money transaction request to send money from wallet to bank account
+**Description:** Creates a new transfer money transaction request to send money from wallet to bank account. The amount is immediately deducted from the user's wallet when the transfer is created (even in PENDING status).
 
 **Authentication:** Required (User)
 
@@ -45,28 +45,31 @@ Admin endpoints additionally require admin role privileges.
 ```json
 {
   "success": true,
-  "message": "Transfer money transaction created successfully",
+  "message": "Transfer money transaction created successfully and amount deducted from wallet",
   "data": {
-    "id": "tm123abc456",
-    "accountId": "acc123abc456",
-    "amount": 500.00,
-    "description": "Monthly rent payment",
-    "userId": "user123",
-    "status": "PENDING",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T10:30:00.000Z",
-    "account": {
-      "id": "acc123abc456",
-      "accountHolderName": "John Doe",
-      "accountNumber": "1234567890",
-      "ifscCode": "SBIN0001234"
+    "transaction": {
+      "id": "tm123abc456",
+      "accountId": "acc123abc456",
+      "amount": 500.00,
+      "description": "Monthly rent payment",
+      "userId": "user123",
+      "status": "PENDING",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z",
+      "account": {
+        "id": "acc123abc456",
+        "accountHolderName": "John Doe",
+        "accountNumber": "1234567890",
+        "ifscCode": "SBIN0001234"
+      },
+      "user": {
+        "id": "user123",
+        "email": "user@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      }
     },
-    "user": {
-      "id": "user123",
-      "email": "user@example.com",
-      "firstName": "John",
-      "lastName": "Doe"
-    }
+    "walletBalance": 1500.00
   }
 }
 ```
@@ -359,7 +362,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 
 **Endpoint:** `PUT /api/transfer-money/admin/:id/approve`
 
-**Description:** Approves a processing transfer transaction, deducts wallet balance, and creates transaction record
+**Description:** Approves a processing transfer transaction and creates transaction record. Note: Wallet balance was already deducted when the transfer was created in PENDING status, so no additional wallet deduction occurs during approval.
 
 **Authentication:** Required (Admin)
 
@@ -372,9 +375,9 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 ```json
 {
   "success": true,
-  "message": "Transfer transaction approved, wallet updated, and transaction recorded successfully",
+  "message": "Transfer approved successfully, money sent to bank account",
   "data": {
-    "updatedTransaction": {
+    "transaction": {
       "id": "tm123abc456",
       "accountId": "acc123abc456",
       "amount": 500.00,
@@ -396,13 +399,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
         "lastName": "Doe"
       }
     },
-    "updatedWallet": {
-      "id": "wallet123",
-      "userId": "user123",
-      "balance": 250.00,
-      "createdAt": "2024-01-10T09:00:00.000Z",
-      "updatedAt": "2024-01-15T12:00:00.000Z"
-    },
+    "walletBalance": 1500.00,
     "allTransactionEntry": {
       "id": "alltxn123",
       "orderId": "ORD_1734567890123",
@@ -416,7 +413,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
       "wallet": {
         "id": "wallet123",
         "userId": "user123",
-        "balance": 250.00,
+        "balance": 1500.00,
         "createdAt": "2024-01-10T09:00:00.000Z",
         "updatedAt": "2024-01-15T12:00:00.000Z"
       },
@@ -445,7 +442,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 
 **Endpoint:** `PUT /api/transfer-money/admin/:id/reject`
 
-**Description:** Rejects a processing transfer transaction with optional reason
+**Description:** Rejects a pending or processing transfer transaction with optional reason. When a transfer is rejected, the amount is automatically added back to the user's wallet since it was deducted when the transfer was created.
 
 **Authentication:** Required (Admin)
 
@@ -466,28 +463,31 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 ```json
 {
   "success": true,
-  "message": "Transfer transaction rejected successfully",
+  "message": "Transfer transaction rejected successfully and amount refunded to wallet",
   "data": {
-    "id": "tm123abc456",
-    "accountId": "acc123abc456",
-    "amount": 500.00,
-    "description": "Monthly rent payment | Rejection reason: Bank account details verification failed",
-    "userId": "user123",
-    "status": "REJECTED",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T13:00:00.000Z",
-    "account": {
-      "id": "acc123abc456",
-      "accountHolderName": "John Doe",
-      "accountNumber": "1234567890",
-      "ifscCode": "SBIN0001234"
+    "transaction": {
+      "id": "tm123abc456",
+      "accountId": "acc123abc456",
+      "amount": 500.00,
+      "description": "Monthly rent payment | Rejection reason: Bank account details verification failed",
+      "userId": "user123",
+      "status": "REJECTED",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T13:00:00.000Z",
+      "account": {
+        "id": "acc123abc456",
+        "accountHolderName": "John Doe",
+        "accountNumber": "1234567890",
+        "ifscCode": "SBIN0001234"
+      },
+      "user": {
+        "id": "user123",
+        "email": "user@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      }
     },
-    "user": {
-      "id": "user123",
-      "email": "user@example.com",
-      "firstName": "John",
-      "lastName": "Doe"
-    }
+    "walletBalance": 2000.00
   }
 }
 ```
@@ -496,7 +496,7 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 ```json
 {
   "success": false,
-  "message": "Only processing transactions can be rejected"
+  "message": "Only pending and processing transactions can be rejected"
 }
 ```
 
@@ -524,15 +524,19 @@ GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10
 - User must have sufficient wallet balance to cover the transfer amount
 - Transfer amount must be greater than 0
 - Account validation ensures the account belongs to the requesting user
+- **Important**: Wallet balance is immediately deducted when transfer is created (PENDING status)
 
 ### Transfer Money Approval Process:
 - Only PENDING transactions can be moved to PROCESSING
-- Only PROCESSING transactions can be APPROVED or REJECTED
+- Only PENDING and PROCESSING transactions can be APPROVED or REJECTED
 - When approved:
-  - User's wallet balance is automatically decremented by the transfer amount
   - A new WITHDRAWAL entry is created in the AllTransaction table
   - The transaction status is updated to COMPLETED
-- Wallet balance is checked again during approval to ensure sufficient funds
+  - **Note**: Wallet balance is NOT deducted during approval since it was already deducted during creation
+- When rejected:
+  - The transfer amount is automatically added back to the user's wallet
+  - The transaction status is updated to REJECTED
+  - Optional rejection reason can be provided
 
 ### Security & Access Control:
 - Users can only see and create transactions for their own accounts
