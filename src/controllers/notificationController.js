@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
- * Get notifications for the authenticated user
+ * Get notifications for the authenticated user with transaction details
  * @route GET /api/notifications
  * @access Private (User/Admin)
  */
@@ -15,29 +15,136 @@ const getMyNotifications = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
     
-    // Get notifications
-    const notifications = await Notification.getForUser(
-      userId, 
-      unreadOnly === 'true' || unreadOnly === true, 
-      skip, 
+    // Build where clause for filtering
+    const where = { userId };
+    
+    if (unreadOnly === 'true' || unreadOnly === true) {
+      where.isRead = false;
+    }
+    
+    // Get notifications with enhanced details
+    const notifications = await prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
       take
+    });
+    
+    // Enhance notifications with related details based on type
+    const enhancedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        const enhancedNotification = { ...notification };
+        
+        switch (notification.type) {
+          case 'REGISTRATION':
+            if (notification.registrationUserId) {
+              const registrationUser = await prisma.user.findUnique({
+                where: { id: notification.registrationUserId },
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phoneNumber: true,
+                  role: true,
+                  isPortalAccess: true,
+                  createdAt: true
+                }
+              });
+              enhancedNotification.registrationDetails = registrationUser;
+            }
+            break;
+            
+          case 'PORTAL_ACCESS':
+            if (notification.portalAccessUserId) {
+              const portalUser = await prisma.user.findUnique({
+                where: { id: notification.portalAccessUserId },
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phoneNumber: true,
+                  role: true,
+                  isPortalAccess: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              });
+              enhancedNotification.portalAccessDetails = portalUser;
+            }
+            break;
+            
+          case 'ADD_MONEY':
+            if (notification.addMoneyTransactionId) {
+              const addMoneyTransaction = await prisma.addMoneyTransaction.findUnique({
+                where: { id: notification.addMoneyTransactionId },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      firstName: true,
+                      lastName: true,
+                      phoneNumber: true
+                    }
+                  }
+                }
+              });
+              enhancedNotification.addMoneyTransactionDetails = addMoneyTransaction;
+            }
+            break;
+            
+          case 'TRANSFER_MONEY':
+            if (notification.transferMoneyTransactionId) {
+              const transferMoneyTransaction = await prisma.transferMoneyTransaction.findUnique({
+                where: { id: notification.transferMoneyTransactionId },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      firstName: true,
+                      lastName: true,
+                      phoneNumber: true
+                    }
+                  },
+                  account: {
+                    select: {
+                      id: true,
+                      accountHolderName: true,
+                      accountNumber: true,
+                      ifscCode: true
+                    }
+                  }
+                }
+              });
+              enhancedNotification.transferMoneyTransactionDetails = transferMoneyTransaction;
+            }
+            break;
+            
+          case 'SYSTEM':
+            // System notifications don't have additional details
+            break;
+            
+          default:
+            break;
+        }
+        
+        return enhancedNotification;
+      })
     );
     
     // Get unread count
     const unreadCount = await Notification.getUnreadCount(userId);
     
     // Get total count for pagination
-    const totalCount = await Notification.getForUser(
-      userId, 
-      unreadOnly === 'true' || unreadOnly === true, 
-      0, 
-      Number.MAX_SAFE_INTEGER
-    ).then(res => res.length);
+    const totalCount = await prisma.notification.count({ where });
 
     res.status(200).json({
       success: true,
       data: {
-        notifications,
+        notifications: enhancedNotifications,
         unreadCount,
         pagination: {
           page: parseInt(page),
