@@ -72,7 +72,8 @@ const getRecentMapTransactions = async (req, res) => {
         account: {
           select: {
             accountHolderName: true,
-            accountNumber: true
+            accountNumber: true,
+            ifscCode: true
           }
         },
         // Include user data
@@ -93,11 +94,12 @@ const getRecentMapTransactions = async (req, res) => {
       amount: tx.amount,
       location: null, // Transfer transactions typically don't have location
       status: tx.status,
-      description: tx.description || `Transfer to ${tx.account.accountHolderName || 'account ending with ' + tx.account.accountNumber.slice(-4)}`,
+      description: tx.description || `Transfer to ${tx.account.accountHolderName || tx.account.accountNumber}`,
       createdAt: tx.createdAt,
       transactionId: tx.transactionId,
       accountHolder: tx.account.accountHolderName,
-      accountNumber: tx.account.accountNumber.slice(-4).padStart(tx.account.accountNumber.length, '*'), // Masked account number
+      accountNumber: tx.account.accountNumber, // Show full account number
+      ifscCode: tx.account.ifscCode,
       userName: `${tx.user.firstName || ''} ${tx.user.lastName || ''}`.trim(),
       userId: tx.user.id
     }));
