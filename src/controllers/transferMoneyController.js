@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { generateUniqueOrderId } = require('../utils/orderIdGenerator');
+const { generateUniqueOrderId, generateTransactionRefId } = require('../utils/orderIdGenerator');
 const Notification = require('../models/Notification');
 const MPin = require('../models/MPin');
 const prisma = new PrismaClient();
@@ -92,12 +92,16 @@ const createTransferMoneyTransaction = async (req, res) => {
         }
       });
 
+      // Generate unique 12-digit transaction reference ID
+      const transactionRefId = await generateTransactionRefId('transferMoneyTransaction');
+
       // Create the transfer transaction
       const transaction = await prisma.transferMoneyTransaction.create({
         data: {
           accountId: accountId,
           amount: parseFloat(amount),
           description: description || null,
+          transactionRefId: transactionRefId,
           userId: userId,
           status: 'PENDING'
         },
@@ -123,7 +127,7 @@ const createTransferMoneyTransaction = async (req, res) => {
 
       return { transaction, updatedWallet };
     });
-    
+
     // Create notification for pending transaction
     await Notification.createTransferMoneyNotification(
       userId,
@@ -289,13 +293,21 @@ const getAllTransferMoneyTransactions = async (req, res) => {
 const updateToProcessing = async (req, res) => {
   try {
     const { id } = req.params;
-    const { transactionId } = req.body;
+    const { transactionRefId } = req.body;
 
-    // Validate transaction ID
-    if (!transactionId) {
+    // Validate transaction Reference ID
+    if (!transactionRefId) {
       return res.status(400).json({
         success: false,
-        message: 'Transaction ID is required'
+        message: 'Transaction Reference ID is required'
+      });
+    }
+
+    // Validate if it's 12 digits
+    if (!/^\d{12}$/.test(transactionRefId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction Reference ID must be exactly 12 digits'
       });
     }
 
@@ -326,7 +338,7 @@ const updateToProcessing = async (req, res) => {
       where: { id },
       data: {
         status: 'PROCESSING',
-        transactionId: transactionId,
+        transactionRefId: transactionRefId,
         updatedAt: new Date()
       },
       include: {
@@ -348,7 +360,7 @@ const updateToProcessing = async (req, res) => {
         }
       }
     });
-    
+
     // Create notification for processing status
     await Notification.createTransferMoneyNotification(
       updatedTransaction.userId,
@@ -452,6 +464,7 @@ const approveTransferTransaction = async (req, res) => {
           userId: existingTransaction.userId,
           amount: existingTransaction.amount,
           transactionType: 'WITHDRAWAL',
+          transactionRefId: existingTransaction.transactionRefId,
           description: 'Sent to bank account',
           transferMoneyTransactionId: existingTransaction.id
         },
@@ -474,7 +487,7 @@ const approveTransferTransaction = async (req, res) => {
         allTransactionEntry
       };
     });
-    
+
     // Create notification for completed status
     await Notification.createTransferMoneyNotification(
       existingTransaction.userId,
@@ -577,7 +590,7 @@ const rejectTransferTransaction = async (req, res) => {
         updatedWallet
       };
     });
-    
+
     // Create notification for rejected status
     await Notification.createTransferMoneyNotification(
       result.updatedTransaction.userId,
@@ -614,7 +627,7 @@ const getTransferTransactionById = async (req, res) => {
     const userRole = req.user.role;
 
     const where = { id };
-    
+
     // If user is not admin, only show their own transactions
     if (userRole !== 'ADMIN') {
       where.userId = userId;

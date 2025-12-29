@@ -18,12 +18,13 @@ async function authenticateToken(req, res, next) {
 
     // Verify the token
     const decoded = verifyToken(token);
-    
+
     // Check if user still exists
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -135,7 +136,7 @@ function requireSelfOrAdmin(userIdParam = 'userId') {
       }
 
       const targetUserId = req.params[userIdParam] || req.user.id;
-      
+
       // Allow if user is admin or accessing their own data
       if (isAdmin(req.user.role) || req.user.id === targetUserId) {
         next();
@@ -169,6 +170,7 @@ async function optionalAuth(req, res, next) {
         where: { id: decoded.userId },
         select: {
           id: true,
+          userRoleNumber: true,
           email: true,
           firstName: true,
           lastName: true,
@@ -182,7 +184,7 @@ async function optionalAuth(req, res, next) {
         req.user = user;
       }
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication if token is invalid

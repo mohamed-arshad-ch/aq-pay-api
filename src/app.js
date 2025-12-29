@@ -65,107 +65,107 @@ app.get('/', (req, res) => {
       health: 'GET /api/health',
       register: 'POST /api/auth/register (requires: email, password, firstName, lastName, phoneNumber)',
       login: 'POST /api/auth/login (requires portal access approval for USER role)',
-      
+
       // User endpoints (protected)
       profile: 'GET /api/auth/profile (protected)',
       updateProfile: 'PUT /api/auth/profile (protected)',
       getUserRole: 'GET /api/auth/role (protected)',
       logout: 'POST /api/auth/logout (protected)',
-      
+
       // Notification endpoints
       getMyNotifications: 'GET /api/notifications?unreadOnly=false&page=1&limit=10 (user/admin)',
       getUnreadNotificationCount: 'GET /api/notifications/unread-count (user/admin)',
       markNotificationAsRead: 'PUT /api/notifications/:id/read (user/admin)',
       markAllNotificationsAsRead: 'PUT /api/notifications/mark-all-read (user/admin)',
       deleteNotification: 'DELETE /api/notifications/:id (user/admin)',
-      
+
       // Admin Notification endpoints
       getAllNotifications: 'GET /api/notifications/admin/all?userId=:userId&type=ADD_MONEY&unreadOnly=true&page=1&limit=10 (admin)',
       getNotificationStats: 'GET /api/notifications/admin/stats (admin)',
       getTotalUnreadCount: 'GET /api/notifications/admin/unread-count (admin)',
       adminMarkAsRead: 'PUT /api/notifications/admin/:id/read (admin)',
       adminDeleteNotification: 'DELETE /api/notifications/admin/:id (admin)',
-      
+
       // Push Token endpoints
       savePushToken: 'POST /api/push-tokens (user/admin) - body: {token, deviceInfo?}',
       getMyPushTokens: 'GET /api/push-tokens/my-tokens (user/admin)',
       deletePushToken: 'DELETE /api/push-tokens (user/admin) - body: {token}',
       getAllPushTokens: 'GET /api/push-tokens/admin/all (admin)',
-      
+
       // Dashboard endpoints
       getRecentMapTransactions: 'GET /api/dashboard/map-transactions (user/admin) - returns 5 most recent transactions with location data',
-      
+
       // Account Management endpoints (user role only)
       createAccount: 'POST /api/accounts (user)',
       getUserAccounts: 'GET /api/accounts?page=1&limit=10 (user)',
       getAccountById: 'GET /api/accounts/:id (user)',
       updateAccount: 'PUT /api/accounts/:id (user)',
       deleteAccount: 'DELETE /api/accounts/:id (user)',
-      
+
       // Wallet Management endpoints (user role only)
       getWallet: 'GET /api/wallet (user)',
       getWalletBalance: 'GET /api/wallet/balance (user)',
-      
+
       // Add Money Transaction endpoints
       createAddMoneyTransaction: 'POST /api/add-money/create (user) - body: {amount, location?, description?}',
       getUserAddMoneyTransactions: 'GET /api/add-money/my-transactions?status=PENDING&page=1&limit=10 (user)',
-      
+
       // Transfer Money Transaction endpoints
       createTransferMoneyTransaction: 'POST /api/transfer-money/create (user) - body: {accountId, amount, description?}',
       getUserTransferMoneyTransactions: 'GET /api/transfer-money/my-transactions?status=PENDING&page=1&limit=10 (user)',
       getTransferTransactionById: 'GET /api/transfer-money/:id (user/admin)',
-      
+
       // All Transactions endpoints
       getUserAllTransactions: 'GET /api/transactions/my-transactions?transactionType=DEPOSIT&page=1&limit=10 (user)',
       getTransactionByOrderId: 'GET /api/transactions/order/:orderId (user/admin)',
       getUserTransactionStats: 'GET /api/transactions/my-stats (user)',
-      
+
       // Transaction Status endpoints (combined Add Money and Transfer Money)
       getUserPendingTransactions: 'GET /api/transaction-status/user/pending?page=1&limit=10 (user)',
       getUserProcessingTransactions: 'GET /api/transaction-status/user/processing?page=1&limit=10 (user)',
       getUserCompletedTransactions: 'GET /api/transaction-status/user/completed?page=1&limit=10 (user)',
       getUserRejectedTransactions: 'GET /api/transaction-status/user/rejected?page=1&limit=10 (user)',
-      
+
       // Admin endpoints (admin only)
       getAllUsers: 'GET /api/auth/users?page=1&limit=10&role=USER (admin)',
       getUserById: 'GET /api/auth/users/:userId (admin or self)',
       updateUser: 'PUT /api/auth/users/:userId (admin)',
       deleteUser: 'DELETE /api/auth/users/:userId (admin)',
       adminRegister: 'POST /api/auth/admin/register (admin)',
-      
+
       // New Admin Comprehensive User Data endpoints
       getAllUsersWithDetails: 'GET /api/admin/users?page=1&limit=10&email=test&role=USER (admin)',
       getUserDetailById: 'GET /api/admin/users/:userId (admin)',
-      
+
       // New Admin Dashboard endpoint
       getDashboardStats: 'GET /api/admin/dashboard (admin)',
-      
+
       // New Admin User-specific endpoints
       getUserAccounts: 'GET /api/admin/users/:userId/accounts?page=1&limit=10 (admin)',
       getUserAddMoneyTransactions: 'GET /api/admin/users/:userId/add-money-transactions?status=COMPLETED&page=1&limit=10 (admin)',
       getUserTransferMoneyTransactions: 'GET /api/admin/users/:userId/transfer-money-transactions?status=COMPLETED&page=1&limit=10 (admin)',
       getUserAllTransactions: 'GET /api/admin/users/:userId/all-transactions?transactionType=DEPOSIT&page=1&limit=10 (admin)',
-      
+
       // Portal Access Management (admin only)
       getPendingUsers: 'GET /api/auth/pending-portal-access?page=1&limit=10 (admin)',
       approvePortalAccess: 'PUT /api/auth/users/:userId/portal-access (admin)',
       bulkApproveAccess: 'POST /api/auth/bulk-approve-portal-access (admin)',
-      
+
       // Add Money Transaction Management (admin only)
       getAllAddMoneyTransactions: 'GET /api/add-money/admin/all-transactions?status=PENDING&page=1&limit=10&userId=:userId (admin)',
-      updateToProcessing: 'PUT /api/add-money/admin/:id/processing (admin) - body: {transactionId}',
+      updateToProcessing: 'PUT /api/add-money/admin/:id/processing (admin) - body: {transactionRefId}',
       approveTransaction: 'PUT /api/add-money/admin/:id/approve (admin) - updates wallet balance & creates all transaction record',
       rejectTransaction: 'PUT /api/add-money/admin/:id/reject (admin) - body: {reason?}',
-      
+
       // Transfer Money Transaction Management (admin only)
       getAllTransferMoneyTransactions: 'GET /api/transfer-money/admin/all-transactions?status=PENDING&page=1&limit=10&userId=:userId (admin)',
       updateTransferToProcessing: 'PUT /api/transfer-money/admin/:id/processing (admin)',
       approveTransferTransaction: 'PUT /api/transfer-money/admin/:id/approve (admin) - updates wallet balance & creates all transaction record',
       rejectTransferTransaction: 'PUT /api/transfer-money/admin/:id/reject (admin) - body: {reason?}',
-      
+
       // All Transactions Management (admin only)
       getAdminAllTransactions: 'GET /api/transactions/admin/all-transactions?transactionType=DEPOSIT&userId=:userId&page=1&limit=10 (admin)',
-      
+
       // Transaction Status Admin endpoints (combined Add Money and Transfer Money)
       getAdminPendingTransactions: 'GET /api/transaction-status/admin/pending?page=1&limit=10&userId=:userId (admin)',
       getAdminProcessingTransactions: 'GET /api/transaction-status/admin/processing?page=1&limit=10&userId=:userId (admin)',
@@ -193,7 +193,7 @@ app.get('/', (req, res) => {
       step1: 'User creates add money transaction via POST /api/add-money/create with amount, location, description',
       step2: 'Transaction is created with status PENDING',
       step3: 'Admin views all transactions via GET /api/add-money/admin/all-transactions',
-      step4: 'Admin updates transaction to PROCESSING via PUT /api/add-money/admin/:id/processing with transactionId',
+      step4: 'Admin updates transaction to PROCESSING via PUT /api/add-money/admin/:id/processing with transactionRefId',
       step5: 'Admin approves (COMPLETED) or rejects (REJECTED) transaction',
       step6: 'If approved, wallet balance is automatically updated with the transaction amount',
       step7: 'System creates entry in AllTransactions table with unique Order ID (format: OI123456)',

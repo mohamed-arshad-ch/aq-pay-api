@@ -74,7 +74,7 @@ async function register(req, res, next) {
       phoneNumber,
       role: userRole
     });
-    
+
     // Create registration notification
     await Notification.createRegistrationNotification(user.id);
 
@@ -84,6 +84,7 @@ async function register(req, res, next) {
       data: {
         user: {
           id: user.id,
+          userRoleNumber: user.userRoleNumber,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
@@ -197,7 +198,7 @@ async function updateProfile(req, res, next) {
     const updateData = {};
     if (firstName !== undefined) updateData.firstName = firstName?.trim() || null;
     if (lastName !== undefined) updateData.lastName = lastName?.trim() || null;
-    
+
     // Phone number validation and update
     if (phoneNumber !== undefined) {
       if (phoneNumber) {
@@ -213,7 +214,7 @@ async function updateProfile(req, res, next) {
         updateData.phoneNumber = null;
       }
     }
-    
+
     // Only admins can update roles
     if (role !== undefined && isAdmin(req.user.role)) {
       updateData.role = role.toUpperCase();
@@ -381,7 +382,7 @@ async function logout(req, res, next) {
     // In a JWT-based auth system, logout is typically handled client-side
     // by removing the token from storage. Server-side logout would require
     // token blacklisting, which can be implemented if needed.
-    
+
     res.status(200).json({
       status: 'success',
       message: 'Logout successful. Please remove the token from your client.'
@@ -495,7 +496,7 @@ async function updatePortalAccess(req, res, next) {
           // Just log the error and continue
         }
       }
-      
+
       // Create portal access notification
       await Notification.createPortalAccessNotification(userId, true);
     } else {
@@ -557,7 +558,7 @@ async function bulkApprovePortalAccess(req, res, next) {
         }
 
         const updatedUser = await User.updatePortalAccess(userId, isPortalAccess);
-        
+
         // If portal access is approved, create wallet if it doesn't exist
         if (isPortalAccess) {
           const walletExists = await Wallet.exists(userId);
@@ -570,14 +571,14 @@ async function bulkApprovePortalAccess(req, res, next) {
               // Don't fail the approval, just log the error
             }
           }
-          
+
           // Create portal access notification
           await Notification.createPortalAccessNotification(userId, true);
         } else {
           // Create portal access denied notification
           await Notification.createPortalAccessNotification(userId, false);
         }
-        
+
         updatedUsers.push(updatedUser);
       } catch (error) {
         errors.push(`Error updating user ${userId}: ${error.message}`);

@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const getAllUsersWithDetails = async (req, res) => {
   try {
     const { page = 1, limit = 10, email, role } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
@@ -152,12 +152,12 @@ const getDashboardStats = async (req, res) => {
       totalPendingTransferMoneyTransactions,
       totalProcessingAddMoneyTransactions,
       totalProcessingTransferMoneyTransactions,
-      totalRejectedAddMoneyTransactions, 
+      totalRejectedAddMoneyTransactions,
       totalRejectedTransferMoneyTransactions
     ] = await Promise.all([
       // Total users
       prisma.user.count(),
-      
+
       // Completed transactions
       prisma.addMoneyTransaction.count({
         where: { status: 'COMPLETED' }
@@ -165,7 +165,7 @@ const getDashboardStats = async (req, res) => {
       prisma.transferMoneyTransaction.count({
         where: { status: 'COMPLETED' }
       }),
-      
+
       // Pending transactions
       prisma.addMoneyTransaction.count({
         where: { status: 'PENDING' }
@@ -173,7 +173,7 @@ const getDashboardStats = async (req, res) => {
       prisma.transferMoneyTransaction.count({
         where: { status: 'PENDING' }
       }),
-      
+
       // Processing transactions
       prisma.addMoneyTransaction.count({
         where: { status: 'PROCESSING' }
@@ -181,7 +181,7 @@ const getDashboardStats = async (req, res) => {
       prisma.transferMoneyTransaction.count({
         where: { status: 'PROCESSING' }
       }),
-      
+
       // Rejected transactions
       prisma.addMoneyTransaction.count({
         where: { status: 'REJECTED' }
@@ -297,16 +297,16 @@ const getDashboardStats = async (req, res) => {
     // Calculate total completed transaction count and amount
     const totalCompletedTransactions = totalCompletedAddMoneyTransactions + totalCompletedTransferMoneyTransactions;
     const totalCompletedAmount = (
-      parseFloat(addMoneyCompletedAmount._sum.amount || 0) + 
+      parseFloat(addMoneyCompletedAmount._sum.amount || 0) +
       parseFloat(transferMoneyCompletedAmount._sum.amount || 0)
     ).toFixed(2);
 
     // Calculate total pending transaction count
     const totalPendingTransactions = totalPendingAddMoneyTransactions + totalPendingTransferMoneyTransactions;
-    
+
     // Calculate total processing transaction count
     const totalProcessingTransactions = totalProcessingAddMoneyTransactions + totalProcessingTransferMoneyTransactions;
-    
+
     // Calculate total rejected transaction count
     const totalRejectedTransactions = totalRejectedAddMoneyTransactions + totalRejectedTransferMoneyTransactions;
 
@@ -371,7 +371,7 @@ const getUserAccounts = async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 10 } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
@@ -446,7 +446,7 @@ const getUserAddMoneyTransactions = async (req, res) => {
   try {
     const { userId } = req.params;
     const { status, page = 1, limit = 10 } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
@@ -527,7 +527,7 @@ const getUserTransferMoneyTransactions = async (req, res) => {
   try {
     const { userId } = req.params;
     const { status, page = 1, limit = 10 } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
@@ -615,7 +615,7 @@ const getUserAllTransactions = async (req, res) => {
   try {
     const { userId } = req.params;
     const { transactionType, page = 1, limit = 10 } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
@@ -661,7 +661,7 @@ const getUserAllTransactions = async (req, res) => {
             id: true,
             amount: true,
             status: true,
-            transactionId: true,
+            transactionRefId: true,
             location: true,
             description: true
           }
@@ -671,6 +671,7 @@ const getUserAllTransactions = async (req, res) => {
             id: true,
             amount: true,
             status: true,
+            transactionRefId: true,
             description: true,
             account: {
               select: {

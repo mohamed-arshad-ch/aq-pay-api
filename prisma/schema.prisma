@@ -40,6 +40,7 @@ enum NotificationType {
 
 model User {
   id                      String                    @id @default(cuid())
+  userRoleNumber          Int                       @unique
   email                   String                    @unique
   password                String
   firstName               String?
@@ -99,7 +100,7 @@ model AddMoneyTransaction {
   amount          Decimal           @db.Decimal(15, 2)
   location        String?
   description     String?
-  transactionId   String?
+  transactionRefId String?           @unique
   status          TransactionStatus @default(PENDING)
   userId          String
   createdAt       DateTime          @default(now())
@@ -118,7 +119,7 @@ model TransferMoneyTransaction {
   accountId       String
   amount          Decimal           @db.Decimal(15, 2)
   description     String?
-  transactionId   String?
+  transactionRefId String?           @unique
   status          TransactionStatus @default(PENDING)
   userId          String
   createdAt       DateTime          @default(now())
@@ -141,6 +142,7 @@ model AllTransaction {
   amount                    Decimal                     @db.Decimal(15, 2)
   transactionType           TransactionType
   description               String?
+  transactionRefId          String?                     @unique
   addMoneyTransactionId     String?                     @unique
   transferMoneyTransactionId String?                    @unique
   createdAt                 DateTime                    @default(now())

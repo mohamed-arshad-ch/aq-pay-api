@@ -9,10 +9,18 @@ class User {
    */
   static async create(userData) {
     const { email, password, firstName, lastName, phoneNumber, role = 'USER' } = userData;
-    
+
     // Hash the password
     const hashedPassword = await hashPassword(password);
-    
+
+    // Get the highest userRoleNumber to increment
+    const lastUser = await prisma.user.findFirst({
+      orderBy: { userRoleNumber: 'desc' },
+      select: { userRoleNumber: true }
+    });
+
+    const nextUserRoleNumber = lastUser ? (lastUser.userRoleNumber + 1) : 1001;
+
     // Create user in database
     const user = await prisma.user.create({
       data: {
@@ -21,11 +29,13 @@ class User {
         firstName: firstName?.trim() || null,
         lastName: lastName?.trim() || null,
         phoneNumber: phoneNumber?.trim() || null,
+        userRoleNumber: nextUserRoleNumber,
         role: role.toUpperCase(), // Ensure role is uppercase
         isPortalAccess: false, // Default to false for new registrations
       },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -49,6 +59,7 @@ class User {
   static async findByEmail(email, includePassword = false) {
     const selectFields = {
       id: true,
+      userRoleNumber: true,
       email: true,
       firstName: true,
       lastName: true,
@@ -89,6 +100,7 @@ class User {
       where: { id },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -128,6 +140,7 @@ class User {
       data: updateData,
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -152,6 +165,7 @@ class User {
       where: { id },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -192,6 +206,7 @@ class User {
       where: whereCondition,
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -238,6 +253,7 @@ class User {
       data: { isPortalAccess },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -266,6 +282,7 @@ class User {
       },
       select: {
         id: true,
+        userRoleNumber: true,
         email: true,
         firstName: true,
         lastName: true,

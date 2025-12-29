@@ -10,7 +10,7 @@ const getRecentMapTransactions = async (req, res) => {
   try {
     const userId = req.user.id;
     const limit = 5; // Fixed to 5 recent transactions
-    
+
     // Get recent add money transactions with location data
     const addMoneyTransactions = await prisma.addMoneyTransaction.findMany({
       where: {
@@ -26,7 +26,7 @@ const getRecentMapTransactions = async (req, res) => {
         status: true,
         description: true,
         createdAt: true,
-        transactionId: true,
+        transactionRefId: true,
         // Include user data
         user: {
           select: {
@@ -37,7 +37,7 @@ const getRecentMapTransactions = async (req, res) => {
         }
       }
     });
-    
+
     // Format add money transactions
     const formattedAddMoneyTransactions = addMoneyTransactions.map(tx => ({
       id: tx.id,
@@ -47,11 +47,11 @@ const getRecentMapTransactions = async (req, res) => {
       status: tx.status,
       description: tx.description || 'Add Money Transaction',
       createdAt: tx.createdAt,
-      transactionId: tx.transactionId,
+      transactionRefId: tx.transactionRefId,
       userName: `${tx.user.firstName || ''} ${tx.user.lastName || ''}`.trim(),
       userId: tx.user.id
     }));
-    
+
     // Get recent transfer money transactions
     // Note: Transfer transactions may not have location data by default,
     // but we include them in case they have some location-related information in the future
@@ -67,7 +67,7 @@ const getRecentMapTransactions = async (req, res) => {
         status: true,
         description: true,
         createdAt: true,
-        transactionId: true,
+        transactionRefId: true,
         // Include account data
         account: {
           select: {
@@ -86,7 +86,7 @@ const getRecentMapTransactions = async (req, res) => {
         }
       }
     });
-    
+
     // Format transfer money transactions
     const formattedTransferTransactions = transferMoneyTransactions.map(tx => ({
       id: tx.id,
@@ -96,19 +96,19 @@ const getRecentMapTransactions = async (req, res) => {
       status: tx.status,
       description: tx.description || `Transfer to ${tx.account.accountHolderName || tx.account.accountNumber}`,
       createdAt: tx.createdAt,
-      transactionId: tx.transactionId,
+      transactionRefId: tx.transactionRefId,
       accountHolder: tx.account.accountHolderName,
       accountNumber: tx.account.accountNumber, // Show full account number
       ifscCode: tx.account.ifscCode,
       userName: `${tx.user.firstName || ''} ${tx.user.lastName || ''}`.trim(),
       userId: tx.user.id
     }));
-    
+
     // Combine both types of transactions
     const allTransactions = [...formattedAddMoneyTransactions, ...formattedTransferTransactions]
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date (newest first)
       .slice(0, limit); // Take only the most recent 5
-    
+
     res.status(200).json({
       success: true,
       data: {

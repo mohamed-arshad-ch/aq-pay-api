@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { generateUniqueOrderId } = require('../utils/orderIdGenerator');
+const { generateUniqueOrderId, generateTransactionRefId } = require('../utils/orderIdGenerator');
 const Notification = require('../models/Notification');
 const prisma = new PrismaClient();
 
@@ -17,12 +17,16 @@ const createAddMoneyTransaction = async (req, res) => {
       });
     }
 
+    // Generate unique 12-digit transaction reference ID
+    const transactionRefId = await generateTransactionRefId('addMoneyTransaction');
+
     // Create the transaction
     const transaction = await prisma.addMoneyTransaction.create({
       data: {
         amount: parseFloat(amount),
         location: location || null,
         description: description || null,
+        transactionRefId: transactionRefId,
         userId: userId,
         status: 'PENDING'
       },
@@ -37,7 +41,7 @@ const createAddMoneyTransaction = async (req, res) => {
         }
       }
     });
-    
+
     // Create notification for pending transaction
     await Notification.createAddMoneyNotification(
       userId,
@@ -183,12 +187,20 @@ const getAllAddMoneyTransactions = async (req, res) => {
 const updateToProcessing = async (req, res) => {
   try {
     const { id } = req.params;
-    const { transactionId } = req.body;
+    const { transactionRefId } = req.body;
 
-    if (!transactionId) {
+    if (!transactionRefId) {
       return res.status(400).json({
         success: false,
-        message: 'Transaction ID is required'
+        message: 'Transaction Reference ID is required'
+      });
+    }
+
+    // Validate if it's 12 digits (if provided by admin, otherwise we might have already generated it)
+    if (!/^\d{12}$/.test(transactionRefId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction Reference ID must be exactly 12 digits'
       });
     }
 
@@ -216,7 +228,7 @@ const updateToProcessing = async (req, res) => {
       where: { id },
       data: {
         status: 'PROCESSING',
-        transactionId: transactionId,
+        transactionRefId: transactionRefId,
         updatedAt: new Date()
       },
       include: {
@@ -230,7 +242,7 @@ const updateToProcessing = async (req, res) => {
         }
       }
     });
-    
+
     // Create notification for processing status
     await Notification.createAddMoneyNotification(
       updatedTransaction.userId,
@@ -342,6 +354,7 @@ const approveTransaction = async (req, res) => {
           userId: existingTransaction.userId,
           amount: existingTransaction.amount,
           transactionType: 'DEPOSIT',
+          transactionRefId: existingTransaction.transactionRefId,
           description: `Added money to wallet`,
           addMoneyTransactionId: existingTransaction.id
         },
@@ -363,7 +376,7 @@ const approveTransaction = async (req, res) => {
         allTransactionEntry
       };
     });
-    
+
     // Create notification for completed status
     await Notification.createAddMoneyNotification(
       existingTransaction.userId,
@@ -432,7 +445,7 @@ const rejectTransaction = async (req, res) => {
         }
       }
     });
-    
+
     // Create notification for rejected status
     await Notification.createAddMoneyNotification(
       updatedTransaction.userId,

@@ -41,7 +41,7 @@ const getUserAllTransactions = async (req, res) => {
               id: true,
               amount: true,
               status: true,
-              transactionId: true
+              transactionRefId: true
             }
           },
           transferMoneyTransaction: {
@@ -49,6 +49,7 @@ const getUserAllTransactions = async (req, res) => {
               id: true,
               amount: true,
               status: true,
+              transactionRefId: true,
               description: true,
               account: {
                 select: {
@@ -131,7 +132,7 @@ const getAdminAllTransactions = async (req, res) => {
               id: true,
               amount: true,
               status: true,
-              transactionId: true,
+              transactionRefId: true,
               location: true
             }
           },
@@ -187,7 +188,7 @@ const getTransactionByOrderId = async (req, res) => {
     const userRole = req.user.role;
 
     const where = { orderId };
-    
+
     // If user is not admin, only show their own transactions
     if (userRole !== 'ADMIN') {
       where.userId = userId;
@@ -216,7 +217,7 @@ const getTransactionByOrderId = async (req, res) => {
             id: true,
             amount: true,
             status: true,
-            transactionId: true,
+            transactionRefId: true,
             location: true,
             description: true
           }
