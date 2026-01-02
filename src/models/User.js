@@ -13,13 +13,17 @@ class User {
     // Hash the password
     const hashedPassword = await hashPassword(password);
 
-    // Get the highest userRoleNumber to increment
-    const lastUser = await prisma.user.findFirst({
-      orderBy: { userRoleNumber: 'desc' },
-      select: { userRoleNumber: true }
-    });
-
-    const nextUserRoleNumber = lastUser ? (lastUser.userRoleNumber + 1) : 1001;
+    let nextUserRoleNumber;
+    if (userData.userRoleNumber) {
+      nextUserRoleNumber = userData.userRoleNumber;
+    } else {
+      // Get the highest userRoleNumber to increment
+      const lastUser = await prisma.user.findFirst({
+        orderBy: { userRoleNumber: 'desc' },
+        select: { userRoleNumber: true }
+      });
+      nextUserRoleNumber = lastUser ? (lastUser.userRoleNumber + 1) : 1001;
+    }
 
     // Create user in database
     const user = await prisma.user.create({

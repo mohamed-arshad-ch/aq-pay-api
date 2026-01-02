@@ -187,22 +187,7 @@ const getAllAddMoneyTransactions = async (req, res) => {
 const updateToProcessing = async (req, res) => {
   try {
     const { id } = req.params;
-    const { transactionRefId } = req.body;
 
-    if (!transactionRefId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Transaction Reference ID is required'
-      });
-    }
-
-    // Validate if it's 12 digits (if provided by admin, otherwise we might have already generated it)
-    if (!/^\d{12}$/.test(transactionRefId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Transaction Reference ID must be exactly 12 digits'
-      });
-    }
 
     // Check if transaction exists and is in PENDING status
     const existingTransaction = await prisma.addMoneyTransaction.findUnique({
@@ -228,7 +213,6 @@ const updateToProcessing = async (req, res) => {
       where: { id },
       data: {
         status: 'PROCESSING',
-        transactionRefId: transactionRefId,
         updatedAt: new Date()
       },
       include: {

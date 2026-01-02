@@ -153,7 +153,7 @@ app.get('/', (req, res) => {
 
       // Add Money Transaction Management (admin only)
       getAllAddMoneyTransactions: 'GET /api/add-money/admin/all-transactions?status=PENDING&page=1&limit=10&userId=:userId (admin)',
-      updateToProcessing: 'PUT /api/add-money/admin/:id/processing (admin) - body: {transactionRefId}',
+      updateToProcessing: 'PUT /api/add-money/admin/:id/processing (admin)',
       approveTransaction: 'PUT /api/add-money/admin/:id/approve (admin) - updates wallet balance & creates all transaction record',
       rejectTransaction: 'PUT /api/add-money/admin/:id/reject (admin) - body: {reason?}',
 
@@ -193,7 +193,7 @@ app.get('/', (req, res) => {
       step1: 'User creates add money transaction via POST /api/add-money/create with amount, location, description',
       step2: 'Transaction is created with status PENDING',
       step3: 'Admin views all transactions via GET /api/add-money/admin/all-transactions',
-      step4: 'Admin updates transaction to PROCESSING via PUT /api/add-money/admin/:id/processing with transactionRefId',
+      step4: 'Admin updates transaction to PROCESSING via PUT /api/add-money/admin/:id/processing',
       step5: 'Admin approves (COMPLETED) or rejects (REJECTED) transaction',
       step6: 'If approved, wallet balance is automatically updated with the transaction amount',
       step7: 'System creates entry in AllTransactions table with unique Order ID (format: OI123456)',

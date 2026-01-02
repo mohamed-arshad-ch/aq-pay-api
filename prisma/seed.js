@@ -14,7 +14,8 @@ async function main() {
       firstName: 'Mac',
       lastName: 'Hadams',
       phoneNumber: '9847274569',
-      role: 'ADMIN'
+      role: 'ADMIN',
+      userRoleNumber: 1000
     };
 
     // Check if admin user already exists
@@ -38,7 +39,8 @@ async function main() {
           lastName: adminData.lastName,
           phoneNumber: adminData.phoneNumber,
           role: adminData.role,
-          isPortalAccess: true, // Admin gets automatic portal access
+          isPortalAccess: true,
+          userRoleNumber: 1000 // Admin gets automatic portal access
         },
         select: {
           id: true,
